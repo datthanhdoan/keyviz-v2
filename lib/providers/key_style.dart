@@ -5,11 +5,11 @@ import 'package:keyviz/domain/vault/vault.dart';
 
 // base preset of the keycap
 enum KeyCapStyle {
-  minimal("极简"),
-  flat("扁平"),
-  elevated("凸起"),
-  plastic("塑料"),
-  mechanical("机械");
+  minimal("Minimal"),
+  flat("Flat"),
+  elevated("Elevated"),
+  plastic("Plastic"),
+  mechanical("Mechanical");
   // retro("复古");
 
   const KeyCapStyle(this.label);
@@ -22,9 +22,9 @@ enum KeyCapStyle {
 
 // text capitalization
 enum TextCap {
-  upper("TT", "全大写"),
-  capitalize("Tt", "首字母大写"),
-  lower("tt", "全小写");
+  upper("TT", "All Uppercase"),
+  capitalize("Tt", "First Letter Uppercase"),
+  lower("tt", "All Lowercase");
 
   const TextCap(this.symbol, this.label);
   final String symbol;
@@ -37,9 +37,9 @@ enum TextCap {
 
 // modifier text length
 enum ModifierTextLength {
-  iconOnly("仅图标"),
-  shortLength("缩写名"),
-  fullLength("完整名");
+  iconOnly("Icon Only"),
+  shortLength("Short Name"),
+  fullLength("Full Name");
 
   const ModifierTextLength(this.label);
   final String label;
@@ -50,9 +50,9 @@ enum ModifierTextLength {
 
 // alignment in vertical axis
 enum VerticalAlignment {
-  top(VuesaxIcons.alignTop, "上"),
-  center(VuesaxIcons.alignVertically, "中"),
-  bottom(VuesaxIcons.alignBottom, "下");
+  top(VuesaxIcons.alignTop, "Top"),
+  center(VuesaxIcons.alignVertically, "Center"),
+  bottom(VuesaxIcons.alignBottom, "Bottom");
 
   const VerticalAlignment(this.iconName, this.label);
   final String iconName;
@@ -61,9 +61,9 @@ enum VerticalAlignment {
 
 // alignment in horizontal axis
 enum HorizontalAlignment {
-  left(VuesaxIcons.alignLeft, "左"),
-  center(VuesaxIcons.alignHorizontally, "中"),
-  right(VuesaxIcons.alignRight, "右");
+  left(VuesaxIcons.alignLeft, "Left"),
+  center(VuesaxIcons.alignHorizontally, "Center"),
+  right(VuesaxIcons.alignRight, "Right");
 
   const HorizontalAlignment(this.iconName, this.label);
   final String iconName;
@@ -72,9 +72,9 @@ enum HorizontalAlignment {
 
 // mouse animation type
 enum MouseClickAnimation {
-  static("静态"),
-  focus("聚合"),
-  filled("实心");
+  static("Static"),
+  focus("Focus"),
+  filled("Filled");
 
   const MouseClickAnimation(this.label);
   final String label;

@@ -5,6 +5,7 @@ import 'package:vector_math/vector_math.dart';
 import 'package:keyviz/config/config.dart';
 import 'package:keyviz/providers/key_event.dart';
 import 'package:keyviz/providers/key_style.dart';
+import 'package:keyviz/l10n/app_localizations.dart';
 import 'package:keyviz/windows/shared/shared.dart';
 
 import '../widgets/widgets.dart';
@@ -18,9 +19,8 @@ class AppearanceTabView extends StatelessWidget {
       children: [
         if (context.keyEvent.screens.length > 1) ...[
           PanelItem(
-            title: "显示器",
-            subtitle: "在哪个屏幕显示可视化按键\n"
-                "为防止显示异常，推荐重启软件",
+            title: context.tr('display'),
+            subtitle: context.tr('choose_screen'),
             action: Selector<KeyEventProvider, int>(
               selector: (_, keyEvent) => keyEvent.screenIndex,
               builder: (context, value, _) => XDropdown<int>(
@@ -29,7 +29,7 @@ class AppearanceTabView extends StatelessWidget {
                   context.keyEvent.screens.length,
                   (i) => i,
                 ),
-                labelBuilder: (option) => "显示器 ${option + 1}",
+                labelBuilder: (option) => context.tr('display_number').replaceAll('{0}', '${option + 1}'),
                 onChanged: (value) => context.keyEvent.screenIndex = value,
               ),
             ),
@@ -37,9 +37,8 @@ class AppearanceTabView extends StatelessWidget {
           const Divider(),
         ],
         PanelItem(
-          title: "位置",
-          subtitle: "在屏幕的哪个位置显示可视化按键\n"
-              "如果开启了历史记录，这个位置会是最新的按键",
+          title: context.tr('position'),
+          subtitle: context.tr('where_to_display'),
           action: Selector<KeyStyleProvider, Alignment>(
             selector: (_, keyStyle) => keyStyle.alignment,
             builder: (context, alignment, _) => _AlignmentPicker(
@@ -52,8 +51,8 @@ class AppearanceTabView extends StatelessWidget {
         ),
         const Divider(),
         PanelItem(
-          title: "边距",
-          subtitle: "按键与屏幕边缘之间的间距",
+          title: context.tr('margin'),
+          subtitle: context.tr('distance_from_edge'),
           actionFlex: 4,
           crossAxisAlignment: CrossAxisAlignment.center,
           action: Selector<KeyStyleProvider, double>(
@@ -68,8 +67,8 @@ class AppearanceTabView extends StatelessWidget {
         ),
         const Divider(),
         PanelItem(
-          title: "时长",
-          subtitle: "按键停留在屏幕上的时间",
+          title: context.tr('duration'),
+          subtitle: context.tr('time_on_screen'),
           actionFlex: 4,
           crossAxisAlignment: CrossAxisAlignment.center,
           action: Selector<KeyEventProvider, int>(
@@ -86,7 +85,7 @@ class AppearanceTabView extends StatelessWidget {
         ),
         const Divider(),
         PanelItem(
-          title: "动画",
+          title: context.tr('animation'),
           action: Selector<KeyEventProvider, KeyCapAnimationType>(
             selector: (_, keyEvent) => keyEvent.keyCapAnimation,
             builder: (context, animation, _) => XDropdown(
@@ -98,8 +97,8 @@ class AppearanceTabView extends StatelessWidget {
         ),
         const Divider(),
         PanelItem(
-          title: "动画速度",
-          subtitle: "数值越高，变化越慢",
+          title: context.tr('animation_speed'),
+          subtitle: context.tr('higher_is_slower'),
           actionFlex: 4,
           crossAxisAlignment: CrossAxisAlignment.center,
           action: Selector<KeyEventProvider, int>(
@@ -160,16 +159,16 @@ class _AlignmentPicker extends StatelessWidget {
     /*8*/ 45,
   ];
 
-  static const _labels = [
-    /*0*/ "左上角",
-    /*1*/ "正上方",
-    /*2*/ "右上角",
-    /*3*/ "正左方",
-    /*4*/ "中心",
-    /*5*/ "正右方",
-    /*6*/ "左下角",
-    /*7*/ "正下方",
-    /*8*/ "右下角",
+  static const _labelKeys = [
+    /*0*/ 'top_left',
+    /*1*/ 'top_center',
+    /*2*/ 'top_right',
+    /*3*/ 'center_left',
+    /*4*/ 'center',
+    /*5*/ 'center_right',
+    /*6*/ 'bottom_left',
+    /*7*/ 'bottom_center',
+    /*8*/ 'bottom_right',
   ];
 
   static const _values = [
@@ -217,7 +216,7 @@ class _AlignmentPicker extends StatelessWidget {
                       size: defaultPadding,
                     ),
             ),
-            tooltip: _labels[i],
+            tooltip: context.tr(_labelKeys[i]),
           ),
         );
       }

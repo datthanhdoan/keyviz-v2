@@ -46,35 +46,29 @@ enum ModifierKey {
 
 // key visualization history mode
 enum VisualizationHistoryMode {
-  none("不显示"),
-  vertical('垂直显示'),
-  horizontal('水平显示');
+  none("None"),
+  vertical('Vertical'),
+  horizontal('Horizontal');
 
   const VisualizationHistoryMode(this.label);
   final String label;
 
   @override
-  // String toString() {
-  //   return this == VisualizationHistoryMode.none
-  //       ? "None"
-  //       : "${name.capitalize()}ly";
-  // }
   String toString() => label;
 }
 
 // keycap animation style
 enum KeyCapAnimationType {
-  none("无"),
-  fade("淡入"),
-  wham("聚焦"),
-  grow("放大"),
-  slide("滑动");
+  none("None"),
+  fade("Fade"),
+  wham("Focus"),
+  grow("Grow"),
+  slide("Slide");
 
   const KeyCapAnimationType(this.label);
   final String label;
 
   @override
-  // String toString() => name.capitalize();
   String toString() => label;
 }
 
@@ -818,23 +812,33 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
   }
 
   _setTrayContextMenu() async {
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final isVietnamese = locale.languageCode == 'vi';
+    
+    final closeLabel = isVietnamese ? 'Đóng' : 'Close';
+    final openLabel = isVietnamese ? 'Mở' : 'Open';
+    final settingsLabel = isVietnamese ? 'Cài đặt' : 'Settings';
+    final openSettingsTooltip = isVietnamese ? 'Mở cửa sổ cài đặt' : 'Open settings window';
+    final exitLabel = isVietnamese ? 'Thoát' : 'Exit';
+    final closeAppTooltip = isVietnamese ? 'Đóng Keyviz' : 'Close Keyviz';
+    
     await trayManager.setContextMenu(
       Menu(
         items: [
           MenuItem(
             key: "toggle",
-            label: _visualizeEvents ? "✗ 关闭" : "✓ 开启",
+            label: _visualizeEvents ? "✗ $closeLabel" : "✓ $openLabel",
           ),
           MenuItem(
             key: "settings",
-            label: "设置",
-            toolTip: "打开设置窗口",
+            label: settingsLabel,
+            toolTip: openSettingsTooltip,
           ),
           MenuItem.separator(),
           MenuItem(
             key: "quit",
-            label: "退出",
-            toolTip: "关闭 Keyviz",
+            label: exitLabel,
+            toolTip: closeAppTooltip,
           ),
         ],
       ),

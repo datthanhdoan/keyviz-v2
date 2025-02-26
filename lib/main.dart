@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hid_listener/hid_listener.dart';
@@ -8,6 +9,7 @@ import 'package:macos_window_utils/macos_window_utils.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
+import 'providers/language_provider.dart';
 
 void main() async {
   // ensure flutter plugins are intialized and ready to use
@@ -23,7 +25,12 @@ void main() async {
     print("No listener backend for this platform");
   }
 
-  runApp(const KeyvizApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LanguageProvider(),
+      child: const KeyvizApp(),
+    ),
+  );
 
   _initWindow();
 }

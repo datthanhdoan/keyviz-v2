@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'package:keyviz/config/config.dart';
 import 'package:keyviz/providers/key_event.dart';
+import 'package:keyviz/providers/language_provider.dart';
+import 'package:keyviz/l10n/app_localizations.dart';
 
 import '../widgets/widgets.dart';
 
@@ -15,8 +17,35 @@ class GeneralTabView extends StatelessWidget {
     return Column(
       children: [
         PanelItem(
-          title: "快捷键过滤器",
-          subtitle: "过滤掉字母、数字、符号等，只显示快捷键",
+          title: "Language / Ngôn ngữ",
+          subtitle: "Choose your preferred language / Chọn ngôn ngữ ưa thích",
+          action: Consumer<LanguageProvider>(
+            builder: (context, languageProvider, _) {
+              return DropdownButton<String>(
+                value: languageProvider.locale.languageCode,
+                items: [
+                  DropdownMenuItem(
+                    value: 'en',
+                    child: Text('English'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'vi',
+                    child: Text('Tiếng Việt'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    languageProvider.setLocale(Locale(value));
+                  }
+                },
+              );
+            },
+          ),
+        ),
+        const Divider(),
+        PanelItem(
+          title: context.tr('hotkey_filter'),
+          subtitle: context.tr('filter_letters_numbers'),
           action: Selector<KeyEventProvider, bool>(
             selector: (_, keyEvent) => keyEvent.filterHotkeys,
             builder: (_, filterHotkeys, __) => XSwitch(
@@ -33,15 +62,15 @@ class GeneralTabView extends StatelessWidget {
           builder: (_, filterHotkeys, __) => PanelItem(
             asRow: false,
             enabled: filterHotkeys,
-            title: "忽略按键",
-            subtitle: "忽略以下修饰键开头的任何按键动作",
+            title: context.tr('ignore_keys'),
+            subtitle: context.tr('ignore_modifier_keys'),
             action: const _IgnoreKeyOptions(),
           ),
         ),
         const Divider(),
         PanelItem(
-          title: "显示历史记录",
-          subtitle: "将之前的按键动作依次显示",
+          title: context.tr('show_history'),
+          subtitle: context.tr('show_previous_keypresses'),
           action: Selector<KeyEventProvider, VisualizationHistoryMode>(
             selector: (_, keyEvent) => keyEvent.historyMode,
             builder: (context, historyMode, __) {
@@ -58,8 +87,8 @@ class GeneralTabView extends StatelessWidget {
         const Divider(),
         PanelItem(
           asRow: false,
-          title: "可视化开关快捷键",
-          subtitle: "按下这个快捷键来切换按键可视化的开启关闭",
+          title: context.tr('toggle_shortcut'),
+          subtitle: context.tr('press_to_toggle'),
           action: HotkeyInput(
             initialValue: context.keyEvent.keyvizToggleShortcut,
             onChanged: (value) => context.keyEvent.keyvizToggleShortcut = value,
@@ -82,7 +111,7 @@ class GeneralTabView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(defaultPadding * .6),
                 ),
               ),
-              child: const Text("重置为默认设置"),
+              child: Text(context.tr('reset_to_defaults')),
             ),
           ),
         ),
@@ -94,7 +123,7 @@ class GeneralTabView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("确定要重置为默认设置吗？"),
+        title: Text(context.tr('confirm_reset')),
         backgroundColor: context.colorScheme.primaryContainer,
         titleTextStyle: context.textTheme.titleLarge,
         actions: [
@@ -106,11 +135,11 @@ class GeneralTabView extends StatelessWidget {
 
               Navigator.of(context).pop();
             },
-            child: const Text("重置"),
+            child: Text(context.tr('reset')),
           ),
           OutlinedButton(
             onPressed: Navigator.of(context).pop,
-            child: const Text("取消"),
+            child: Text(context.tr('cancel')),
           ),
         ],
         elevation: 0,
