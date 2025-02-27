@@ -1075,7 +1075,7 @@ class KeyStyleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  reverToDefaults() {
+  revertToDefaults() {
     _keyCapStyle = _Defaults.keyCapStyle;
     _fontSize = _Defaults.fontSize;
     _fontColor = _Defaults.fontColor;
@@ -1125,11 +1125,11 @@ class KeyStyleProvider extends ChangeNotifier {
   }
   
   BuildContext? _getGlobalContext() {
-    // Sử dụng cách khác để lấy context
     try {
       // Thử sử dụng rootElement nếu có thể truy cập
       final rootElement = WidgetsBinding.instance.rootElement;
       if (rootElement != null) {
+        // Chuyển đổi Element thành BuildContext
         return rootElement;
       }
       

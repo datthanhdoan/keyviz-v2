@@ -72,7 +72,7 @@ class _SettingsWindowState extends State<_SettingsWindow> {
                     child: DecoratedBox(
                       decoration: _innerDecor,
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(defaultPadding * 1.5),
+                        padding: const EdgeInsets.all(defaultPadding),
                         child: _currentTabView,
                       ),
                     ),

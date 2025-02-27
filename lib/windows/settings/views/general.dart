@@ -6,6 +6,7 @@ import 'package:keyviz/config/config.dart';
 import 'package:keyviz/providers/key_event.dart';
 import 'package:keyviz/providers/language_provider.dart';
 import 'package:keyviz/l10n/app_localizations.dart';
+import 'package:keyviz/domain/vault/vault.dart';
 
 import '../widgets/widgets.dart';
 
@@ -79,6 +80,8 @@ class GeneralTabView extends StatelessWidget {
                 options: VisualizationHistoryMode.values,
                 onChanged: (value) {
                   context.keyEvent.historyMode = value;
+                  Vault.save(context);
+                  debugPrint("Changed historyMode to: $value");
                 },
               );
             },
@@ -131,7 +134,7 @@ class GeneralTabView extends StatelessWidget {
             onPressed: () {
               // revert to defaults
               context.keyEvent.revertToDefaults();
-              context.keyStyle.reverToDefaults();
+              context.keyStyle.revertToDefaults();
 
               Navigator.of(context).pop();
             },

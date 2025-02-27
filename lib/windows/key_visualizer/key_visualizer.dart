@@ -89,24 +89,36 @@ class _VisualizationHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Selector<KeyStyleProvider, Tuple2<Alignment, double>>(
-      builder: (context, tuple, child) => Wrap(
-        direction: direction,
-        spacing: tuple.item2,
-        runSpacing: tuple.item2,
-        alignment: _wrapAlignment(tuple.item1),
-        crossAxisAlignment: _crossAxisAlignment(tuple.item1),
-        children: [
-          for (int i = 0; i < groups.length; i++)
-            _FadingKeyCapGroup(
-              key: Key(groups[_showReversed(tuple.item1) ? groups.length - 1 - i : i]),
-              groupId: groups[_showReversed(tuple.item1) ? groups.length - 1 - i : i],
-              index: i,
-              totalGroups: groups.length,
-              direction: direction,
-              alignment: tuple.item1,
-            )
-        ],
-      ),
+      builder: (context, tuple, child) {
+        // Nếu là hiển thị theo chiều dọc, sử dụng container với gradient
+        if (direction == Axis.vertical) {
+          return _VerticalGradientHistory(
+            groups: groups,
+            alignment: tuple.item1,
+            spacing: tuple.item2,
+          );
+        }
+        
+        // Nếu là hiển thị theo chiều ngang, giữ nguyên cách hiển thị cũ
+        return Wrap(
+          direction: direction,
+          spacing: tuple.item2,
+          runSpacing: tuple.item2,
+          alignment: _wrapAlignment(tuple.item1),
+          crossAxisAlignment: _crossAxisAlignment(tuple.item1),
+          children: [
+            for (int i = 0; i < groups.length; i++)
+              _FadingKeyCapGroup(
+                key: Key(groups[_showReversed(tuple.item1) ? groups.length - 1 - i : i]),
+                groupId: groups[_showReversed(tuple.item1) ? groups.length - 1 - i : i],
+                index: i,
+                totalGroups: groups.length,
+                direction: direction,
+                alignment: tuple.item1,
+              )
+          ],
+        );
+      },
       selector: (_, keyStyle) => Tuple2(
         keyStyle.alignment,
         keyStyle.backgroundSpacing,
@@ -169,7 +181,131 @@ class _VisualizationHistory extends StatelessWidget {
   }
 }
 
-class _FadingKeyCapGroup extends StatelessWidget {
+// Widget mới để hiển thị lịch sử theo chiều dọc với gradient
+class _VerticalGradientHistory extends StatefulWidget {
+  const _VerticalGradientHistory({
+    required this.groups,
+    required this.alignment,
+    required this.spacing,
+  });
+
+  final List<String> groups;
+  final Alignment alignment;
+  final double spacing;
+
+  @override
+  State<_VerticalGradientHistory> createState() => _VerticalGradientHistoryState();
+}
+
+class _VerticalGradientHistoryState extends State<_VerticalGradientHistory> with SingleTickerProviderStateMixin {
+  late AnimationController _fadeController;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Tạo animation controller để điều khiển hiệu ứng fade
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeController.forward();
+  }
+  
+  @override
+  void didUpdateWidget(_VerticalGradientHistory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Khi có phím mới được thêm vào, reset animation
+    if (widget.groups.length != oldWidget.groups.length) {
+      _fadeController.reset();
+      _fadeController.forward();
+    }
+  }
+  
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Xác định hướng hiển thị dựa vào alignment
+    final bool isReversed = _showReversed(widget.alignment);
+    
+    return AnimatedBuilder(
+      animation: _fadeController,
+      builder: (context, child) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: _getColumnAlignment(widget.alignment),
+          children: [
+            for (int i = 0; i < widget.groups.length; i++)
+              Padding(
+                padding: EdgeInsets.only(bottom: i < widget.groups.length - 1 ? widget.spacing : 0),
+                child: AnimatedOpacity(
+                  // Kết hợp cả hai logic fade:
+                  // 1. Fade theo vị trí (phím càng lên cao càng mờ dần)
+                  // 2. Fade theo thời gian (phím mới thêm vào sẽ hiện dần)
+                  opacity: _calculateCombinedOpacity(i, widget.groups.length, isReversed),
+                  duration: const Duration(milliseconds: 300),
+                  child: KeyCapGroup(
+                    key: Key(widget.groups[isReversed ? widget.groups.length - 1 - i : i]),
+                    groupId: widget.groups[isReversed ? widget.groups.length - 1 - i : i],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Tính toán opacity kết hợp cả vị trí và thời gian
+  double _calculateCombinedOpacity(int index, int total, bool isReversed) {
+    if (total <= 1) return _fadeController.value;
+    
+    // Vị trí tương đối (0 = đầu, 1 = cuối)
+    double relativePosition = index / (total - 1);
+    
+    // Đảo ngược vị trí nếu cần - đảm bảo phím mới nhất luôn sáng nhất
+    if (isReversed) {
+      relativePosition = 1.0 - relativePosition;
+    }
+    
+    // Opacity theo vị trí: phím mới nhất có opacity = 1.0, phím cũ nhất có opacity = 0.3
+    double positionOpacity = (0.3 + 0.7 * relativePosition).clamp(0.3, 1.0);
+    
+    // Kết hợp với opacity theo thời gian (animation)
+    // Phím mới thêm vào sẽ có hiệu ứng fade in
+    double timeOpacity = index == (isReversed ? 0 : total - 1) ? _fadeController.value : 1.0;
+    
+    // Kết hợp cả hai loại opacity
+    return (positionOpacity * timeOpacity).clamp(0.0, 1.0);
+  }
+
+  CrossAxisAlignment _getColumnAlignment(Alignment alignment) {
+    switch (alignment) {
+      case Alignment.topLeft:
+      case Alignment.centerLeft:
+      case Alignment.bottomLeft:
+        return CrossAxisAlignment.start;
+
+      case Alignment.topCenter:
+      case Alignment.center:
+      case Alignment.bottomCenter:
+        return CrossAxisAlignment.center;
+
+      case Alignment.topRight:
+      case Alignment.centerRight:
+      case Alignment.bottomRight:
+        return CrossAxisAlignment.end;
+    }
+
+    return CrossAxisAlignment.center;
+  }
+}
+
+class _FadingKeyCapGroup extends StatefulWidget {
   const _FadingKeyCapGroup({
     Key? key,
     required this.groupId,
@@ -186,36 +322,56 @@ class _FadingKeyCapGroup extends StatelessWidget {
   final Alignment alignment;
 
   @override
-  Widget build(BuildContext context) {
-    // Nếu không phải chiều dọc, không cần hiệu ứng fade
-    if (direction != Axis.vertical) {
-      return KeyCapGroup(
-        key: Key(groupId),
-        groupId: groupId,
-      );
-    }
+  State<_FadingKeyCapGroup> createState() => _FadingKeyCapGroupState();
+}
 
+class _FadingKeyCapGroupState extends State<_FadingKeyCapGroup> with SingleTickerProviderStateMixin {
+  late AnimationController _fadeController;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Tạo animation controller để điều khiển hiệu ứng fade
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeController.forward();
+  }
+  
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Tính toán opacity dựa trên thứ tự hiển thị thực tế
     // Phím mới nhất có opacity = 1, phím cũ nhất có opacity = 0.3
-    double opacity = 1.0;
     
     // Xác định vị trí tương đối (0 = cũ nhất, 1 = mới nhất)
-    double relativePosition = index / (totalGroups - 1);
+    double relativePosition = widget.index / (widget.totalGroups - 1);
     
-    // Đảo ngược vị trí nếu hiển thị từ dưới lên
-    if (_showReversed(alignment)) {
+    // Đảo ngược vị trí nếu hiển thị từ dưới lên hoặc từ phải qua trái
+    bool shouldReverse = _showReversed(widget.alignment);
+    if (shouldReverse) {
       relativePosition = 1.0 - relativePosition;
     }
     
-    // Tính opacity, giới hạn trong khoảng [0.3, 1.0]
-    opacity = (relativePosition * 0.7 + 0.3).clamp(0.3, 1.0);
+    // Tính opacity theo vị trí, giới hạn trong khoảng [0.3, 1.0]
+    double positionOpacity = (0.3 + 0.7 * relativePosition).clamp(0.3, 1.0);
+    
+    // Kết hợp với opacity theo thời gian (animation)
+    // Phím mới thêm vào sẽ có hiệu ứng fade in
+    double opacity = (positionOpacity * _fadeController.value).clamp(0.0, 1.0);
     
     return AnimatedOpacity(
       opacity: opacity,
       duration: const Duration(milliseconds: 300),
       child: KeyCapGroup(
-        key: Key(groupId),
-        groupId: groupId,
+        key: Key(widget.groupId),
+        groupId: widget.groupId,
       ),
     );
   }

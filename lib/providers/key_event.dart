@@ -221,8 +221,12 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
   Offset get cursorOffset => _cursorOffset;
   bool get mouseButtonDown => _mouseButtonDown;
 
-  bool get _ignoreHistory =>
-      _historyMode == VisualizationHistoryMode.none || _styling;
+  bool get _ignoreHistory {
+    // Luôn trả về true nếu đang trong chế độ styling
+    if (_styling) return true;
+    // Chỉ trả về true nếu historyMode là none
+    return _historyMode == VisualizationHistoryMode.none;
+  }
 
   set screenIndex(int value) {
     _screenIndex = value;
@@ -307,6 +311,9 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     trayManager.addListener(this);
     await _setTrayIcon();
     await _setTrayContextMenu();
+    
+    // Đảm bảo historyMode được áp dụng đúng cách
+    _applyHistoryMode();
   }
 
   _registerMouseListener() async {
@@ -759,11 +766,70 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
       return;
     }
 
+    // Nếu đang ở chế độ hiển thị lịch sử, chỉ cập nhật opacity
+    if (_historyMode != VisualizationHistoryMode.none) {
+      // Thêm hiệu ứng fade mượt mà cho phím trong chế độ lịch sử
+      const fadeSteps = 8;
+      final fadeStepDuration = (animationDuration.inMilliseconds ~/ fadeSteps).clamp(30, 80);
+      
+      // Giảm dần opacity từ 1.0 xuống 0.8
+      for (int i = 1; i <= fadeSteps; i++) {
+        final opacity = (1.0 - (i / fadeSteps) * 0.2).clamp(0.8, 1.0);
+        _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: opacity);
+        notifyListeners();
+        await Future.delayed(Duration(milliseconds: fadeStepDuration));
+      }
+      
+      // Cập nhật trạng thái cuối cùng
+      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: 0.8);
+      notifyListeners();
+      
+      // Đặt một timer để xóa phím sau 10 giây
+      Future.delayed(Duration(seconds: 10), () {
+        // Kiểm tra xem phím còn tồn tại không
+        if (_keyboardEvents.containsKey(groupId) && 
+            _keyboardEvents[groupId]!.containsKey(keyId) &&
+            _keyboardEvents[groupId]![keyId]!.pressedCount == pressedCount) {
+          // Thêm hiệu ứng fade out hoàn toàn
+          const fadeSteps = 10;
+          final fadeStepDuration = (animationDuration.inMilliseconds ~/ fadeSteps).clamp(30, 80);
+          
+          // Giảm dần opacity từ 0.8 xuống 0.0
+          for (int i = 1; i <= fadeSteps; i++) {
+            final opacity = (0.8 * (1.0 - i / fadeSteps)).clamp(0.0, 0.8);
+            
+            // Kiểm tra lại xem phím còn tồn tại không
+            if (!_keyboardEvents.containsKey(groupId) || 
+                !_keyboardEvents[groupId]!.containsKey(keyId)) {
+              return;
+            }
+            
+            _keyboardEvents[groupId]![keyId] = _keyboardEvents[groupId]![keyId]!.copyWith(opacity: opacity);
+            notifyListeners();
+            
+            await Future.delayed(Duration(milliseconds: fadeStepDuration));
+          }
+          
+          // Xóa phím sau khi hoàn thành hiệu ứng
+          _keyboardEvents[groupId]!.remove(keyId);
+          notifyListeners();
+          
+          // Kiểm tra xem nhóm có trống không
+          if (_keyboardEvents[groupId]!.isEmpty) {
+            _keyboardEvents.remove(groupId);
+            notifyListeners();
+          }
+        }
+      });
+      
+      return;
+    }
+    
     // Thêm hiệu ứng fade out trước khi ẩn hoàn toàn
     if (!noKeyCapAnimation) {
       // Giảm dần opacity từ 1.0 xuống 0.0
-      const fadeSteps = 5;
-      final fadeStepDuration = animationDuration.inMilliseconds ~/ fadeSteps;
+      const fadeSteps = 15; // Tăng số bước để hiệu ứng mượt hơn
+      final fadeStepDuration = (animationDuration.inMilliseconds ~/ fadeSteps).clamp(20, 50); // Đảm bảo thời gian hợp lý
       
       for (int i = 1; i <= fadeSteps; i++) {
         final opacity = (1.0 - (i / fadeSteps)).clamp(0.0, 1.0);
@@ -773,25 +839,14 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
       }
       
       // animate out the key event
-      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(show: false);
+      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(show: false, opacity: 0.0);
       notifyListeners();
 
       // wait for animation to finish
       await Future.delayed(animationDuration);
     }
     
-    // Thêm hiệu ứng fade out trước khi xóa phím bấm
-    const fadeOutSteps = 5;
-    final fadeOutStepDuration = animationDuration.inMilliseconds ~/ fadeOutSteps;
-    
-    for (int i = 1; i <= fadeOutSteps; i++) {
-      final opacity = (1.0 - (i / fadeOutSteps)).clamp(0.0, 1.0);
-      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: opacity);
-      notifyListeners();
-      await Future.delayed(Duration(milliseconds: fadeOutStepDuration));
-    }
-
-    // remove key event
+    // Xóa phím sau khi hoàn thành hiệu ứng
     _keyboardEvents[groupId]!.remove(keyId);
     notifyListeners();
 
@@ -931,7 +986,7 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
 
   _updateFromJson() async {
     final data = await Vault.loadConfigData();
-
+    
     // set preferred display
     _setDisplay(data?[_JsonKeys.screenFrame]);
 
@@ -939,9 +994,27 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
 
     _filterHotkeys = data[_JsonKeys.filterHotkeys] ?? _Defaults.filterHotkeys;
 
-    for (final modifier in ModifierKey.values) {
-      _ignoreKeys[modifier] = data[_JsonKeys.ignoreKeys][modifier.name] ??
-          _Defaults.ignoreKeys[modifier];
+    final ignoreKeys = data[_JsonKeys.ignoreKeys];
+    if (ignoreKeys != null) {
+      for (final key in ignoreKeys.keys) {
+        switch (key) {
+          case "control":
+            _ignoreKeys[ModifierKey.control] = ignoreKeys[key];
+            break;
+
+          case "shift":
+            _ignoreKeys[ModifierKey.shift] = ignoreKeys[key];
+            break;
+
+          case "alt":
+            _ignoreKeys[ModifierKey.alt] = ignoreKeys[key];
+            break;
+
+          case "meta":
+            _ignoreKeys[ModifierKey.meta] = ignoreKeys[key];
+            break;
+        }
+      }
     }
 
     switch (data[_JsonKeys.historyMode]) {
@@ -956,30 +1029,28 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
       case "horizontal":
         _historyMode = VisualizationHistoryMode.horizontal;
         break;
+        
+      default:
+        // Đảm bảo historyMode luôn có giá trị hợp lệ
+        _historyMode = _Defaults.historyMode;
+        break;
+    }
+    
+    // Ghi log để debug
+    debugPrint("Loaded historyMode: $_historyMode");
+
+    final toggleShortcut = data[_JsonKeys.toggleShortcut];
+    if (toggleShortcut != null) {
+      keyvizToggleShortcut = List<int>.from(toggleShortcut);
     }
 
-    if (data[_JsonKeys.toggleShortcut] != null) {
-      keyvizToggleShortcut =
-          (data[_JsonKeys.toggleShortcut] as List).cast<int>();
-    }
-
-    _lingerDurationInSeconds = data[_JsonKeys.lingerDurationInSeconds] ??
-        _Defaults.lingerDurationInSeconds;
-
-    _animationSpeed =
-        data[_JsonKeys.animationSpeed] ?? _Defaults.animationSpeed;
+    _lingerDurationInSeconds =
+        data[_JsonKeys.lingerDurationInSeconds] ?? _Defaults.lingerDurationInSeconds;
+    _animationSpeed = data[_JsonKeys.animationSpeed] ?? _Defaults.animationSpeed;
 
     switch (data[_JsonKeys.keyCapAnimation]) {
       case "none":
         _keyCapAnimation = KeyCapAnimationType.none;
-        break;
-
-      case "slide":
-        _keyCapAnimation = KeyCapAnimationType.slide;
-        break;
-
-      case "grow":
-        _keyCapAnimation = KeyCapAnimationType.grow;
         break;
 
       case "fade":
@@ -989,14 +1060,20 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
       case "wham":
         _keyCapAnimation = KeyCapAnimationType.wham;
         break;
+
+      case "grow":
+        _keyCapAnimation = KeyCapAnimationType.grow;
+        break;
+
+      case "slide":
+        _keyCapAnimation = KeyCapAnimationType.slide;
+        break;
     }
 
     _showMouseClicks =
         data[_JsonKeys.showMouseClicks] ?? _Defaults.showMouseClicks;
-
     _highlightCursor =
         data[_JsonKeys.highlightCursor] ?? _Defaults.highlightCursor;
-
     _showMouseEvents =
         data[_JsonKeys.showMouseEvents] ?? _Defaults.showMouseEvents;
   }
@@ -1098,6 +1175,18 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
         Vault.save(context);
       }
     });
+  }
+
+  // Phương thức để đảm bảo historyMode được áp dụng đúng cách
+  _applyHistoryMode() {
+    // Ghi log để debug
+    debugPrint("Applying historyMode: $_historyMode");
+    
+    // Đảm bảo historyMode được áp dụng đúng cách
+    if (_historyMode != VisualizationHistoryMode.none) {
+      // Đảm bảo _ignoreHistory được tính toán lại
+      notifyListeners();
+    }
   }
 }
 
