@@ -609,3 +609,44 @@ class _Container extends StatelessWidget {
     );
   }
 }
+
+class ColorPickerButton extends StatelessWidget {
+  final String? label;
+  final Color color;
+  final ValueChanged<Color> onColorChanged;
+
+  const ColorPickerButton({
+    super.key,
+    this.label,
+    required this.color,
+    required this.onColorChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _showColorPicker(context),
+      child: Container(
+        height: 32,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(defaultPadding * .25),
+          border: Border.all(
+            color: context.colorScheme.outline,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showColorPicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => ColorPickerDialog(
+        title: label,
+        initialColor: color,
+        onColorChanged: onColorChanged,
+      ),
+    );
+  }
+}

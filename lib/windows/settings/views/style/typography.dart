@@ -13,7 +13,7 @@ class TypographyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return XExpansionTile(
-      title: "文本",
+      title: "Typography",
       children: [
         Selector<KeyStyleProvider, bool>(
           selector: (_, keyStyle) => keyStyle.differentColorForModifiers,
@@ -23,7 +23,7 @@ class TypographyView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SubPanelItem(
-                        title: "文字大小",
+                        title: "Font Size",
                         child: Selector<KeyStyleProvider, double>(
                           selector: (_, keyStyle) => keyStyle.fontSize,
                           builder: (context, fontSize, _) => XSlider(
@@ -38,52 +38,41 @@ class TypographyView extends StatelessWidget {
                       ),
                       const VerySmallColumnGap(),
                       SubPanelItem(
-                        title: "常规键颜色",
-                        child: SizedBox(
-                          width: defaultPadding * 10,
-                          child: RawColorInputSubPanelItem(
-                            label: "常规键文字颜色",
-                            defaultValue: context.keyStyle.fontColor,
-                            onChanged: (Color value) {
-                              context.keyStyle.fontColor = value;
-                            },
-                          ),
+                        title: "Regular Key Color",
+                        child: ColorPickerButton(
+                          label: "Regular Key Text Color",
+                          color: context.keyStyle.fontColor,
+                          onColorChanged: (color) {
+                            context.keyStyle.fontColor = color;
+                          },
                         ),
                       ),
                       const VerySmallColumnGap(),
                       SubPanelItem(
-                        title: "修饰键颜色",
-                        child: SizedBox(
-                          width: defaultPadding * 10,
-                          child: RawColorInputSubPanelItem(
-                            label: "修饰键文字颜色",
-                            defaultValue: context.keyStyle.mFontColor,
-                            onChanged: (Color value) {
-                              context.keyStyle.mFontColor = value;
-                            },
-                          ),
+                        title: "Modifier Key Color",
+                        child: ColorPickerButton(
+                          label: "Modifier Key Text Color",
+                          color: context.keyStyle.mFontColor,
+                          onColorChanged: (color) {
+                            context.keyStyle.mFontColor = color;
+                          },
                         ),
                       ),
                     ],
                   )
-                : SubPanelItemGroup(
-                    items: [
-                      RawInputSubPanelItem(
-                        title: "文字大小",
+                : SubPanelItem(
+                    title: "Font Size",
+                    child: Selector<KeyStyleProvider, double>(
+                      selector: (_, keyStyle) => keyStyle.fontSize,
+                      builder: (context, fontSize, _) => XSlider(
+                        max: 128,
                         suffix: "px",
-                        defaultValue: context.keyStyle.fontSize.toInt(),
+                        value: fontSize,
                         onChanged: (value) {
-                          context.keyStyle.fontSize = value.toDouble();
+                          context.keyStyle.fontSize = value;
                         },
                       ),
-                      RawColorInputSubPanelItem(
-                        label: "文字颜色",
-                        defaultValue: context.keyStyle.fontColor,
-                        onChanged: (color) {
-                          context.keyStyle.fontColor = color;
-                        },
-                      ),
-                    ],
+                    ),
                   );
           },
         ),
@@ -91,7 +80,7 @@ class TypographyView extends StatelessWidget {
         SubPanelItemGroup(
           items: [
             RawSubPanelItem(
-              title: "大小写",
+              title: "Capitalization",
               child: Selector<KeyStyleProvider, TextCap>(
                 selector: (_, keyStyle) => keyStyle.textCap,
                 builder: (context, textCap, _) => Row(
@@ -128,7 +117,7 @@ class TypographyView extends StatelessWidget {
               ),
             ),
             RawSubPanelItem(
-              title: "修饰键",
+              title: "Modifier Keys",
               child: SizedBox(
                 width: defaultPadding * 5,
                 child: Selector<KeyStyleProvider, ModifierTextLength>(

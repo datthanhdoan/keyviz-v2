@@ -13,115 +13,104 @@ class LayoutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return XExpansionTile(
-      title: "布局",
+      title: "Layout",
       children: [
-        SubPanelItemGroup(
-          items: [
-            // vertical align
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (final value in VerticalAlignment.values)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      right: value == VerticalAlignment.values.last
-                          ? 0
-                          : defaultPadding,
-                    ),
-                    child: Selector<KeyStyleProvider, VerticalAlignment>(
-                      selector: (_, keyStyle) => keyStyle.verticalAlignment,
-                      builder: (context, verticalAlignment, _) {
-                        return XIconButton(
-                          icon: value.iconName,
-                          // tooltip: value.name,
-                          tooltip: value.label,
-                          onTap: () {
-                            context.keyStyle.verticalAlignment = value;
-                          },
-                          selected: verticalAlignment == value,
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-            // horizontal align
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (final value in HorizontalAlignment.values)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      right: value == HorizontalAlignment.values.last
-                          ? 0
-                          : defaultPadding,
-                    ),
-                    child: Selector<KeyStyleProvider, HorizontalAlignment>(
-                      selector: (_, keyStyle) {
-                        return keyStyle.horizontalAlignment;
-                      },
-                      builder: (context, horizontalAlignment, _) {
-                        return XIconButton(
-                          icon: value.iconName,
-                          // tooltip: value.name,
-                          tooltip: value.label,
-                          onTap: () {
-                            context.keyStyle.horizontalAlignment = value;
-                          },
-                          selected: horizontalAlignment == value,
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-        const VerySmallColumnGap(),
-        SubPanelItem(
-          title: "图标",
-          child: Selector<KeyStyleProvider, bool>(
-            selector: (_, keyStyle) => keyStyle.showIcon,
-            builder: (context, showIcon, _) {
-              return XSwitch(
-                value: showIcon,
-                onChange: (value) => context.keyStyle.showIcon = value,
-              );
-            },
-          ),
-        ),
-        const VerySmallColumnGap(),
         Selector<KeyStyleProvider, bool>(
-          selector: (_, keyStyle) =>
-              keyStyle.keyCapStyle != KeyCapStyle.minimal,
-          builder: (_, enabled, child) => SubPanelItem(
-            enabled: enabled,
-            title: "符号",
-            child: child!,
-          ),
-          child: Selector<KeyStyleProvider, bool>(
-            selector: (_, keyStyle) => keyStyle.showSymbol,
-            builder: (context, showSymbol, _) {
-              return XSwitch(
-                value: showSymbol,
-                onChange: (value) => context.keyStyle.showSymbol = value,
-              );
-            },
+          selector: (_, keyStyle) => keyStyle.showBorder,
+          builder: (context, showBorder, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SubPanelItem(
+                title: "Border",
+                child: XSwitch(
+                  value: showBorder,
+                  onChanged: (value) {
+                    context.keyStyle.showBorder = value;
+                  },
+                ),
+              ),
+              if (showBorder) ...[
+                const VerySmallColumnGap(),
+                SubPanelItem(
+                  title: "Border Width",
+                  child: Selector<KeyStyleProvider, double>(
+                    selector: (_, keyStyle) => keyStyle.borderWidth,
+                    builder: (context, borderWidth, _) => XSlider(
+                      max: 10,
+                      suffix: "px",
+                      value: borderWidth,
+                      onChanged: (value) {
+                        context.keyStyle.borderWidth = value;
+                      },
+                    ),
+                  ),
+                ),
+                const VerySmallColumnGap(),
+                SubPanelItem(
+                  title: "Border Radius",
+                  child: Selector<KeyStyleProvider, double>(
+                    selector: (_, keyStyle) => keyStyle.borderRadius,
+                    builder: (context, borderRadius, _) => XSlider(
+                      max: 32,
+                      suffix: "px",
+                      value: borderRadius,
+                      onChanged: (value) {
+                        context.keyStyle.borderRadius = value;
+                      },
+                    ),
+                  ),
+                ),
+                const VerySmallColumnGap(),
+                SubPanelItem(
+                  title: "Border Color",
+                  child: ColorPickerButton(
+                    color: context.keyStyle.borderColor,
+                    onColorChanged: (color) {
+                      context.keyStyle.borderColor = color;
+                    },
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         const VerySmallColumnGap(),
         SubPanelItem(
-          title: '加号分隔符',
+          title: "Icons",
           child: Selector<KeyStyleProvider, bool>(
-            selector: (_, keyStyle) => keyStyle.addPlusSeparator,
-            builder: (context, addPlusSeparator, _) {
-              return XSwitch(
-                value: addPlusSeparator,
-                onChange: (value) {
-                  context.keyStyle.addPlusSeparator = value;
-                },
-              );
-            },
+            selector: (_, keyStyle) => keyStyle.showIcons,
+            builder: (context, showIcons, _) => XSwitch(
+              value: showIcons,
+              onChanged: (value) {
+                context.keyStyle.showIcons = value;
+              },
+            ),
+          ),
+        ),
+        const VerySmallColumnGap(),
+        SubPanelItem(
+          title: "Symbols",
+          child: Selector<KeyStyleProvider, bool>(
+            selector: (_, keyStyle) => keyStyle.showSymbols,
+            builder: (context, showSymbols, _) => XSwitch(
+              value: showSymbols,
+              onChanged: (value) {
+                context.keyStyle.showSymbols = value;
+              },
+            ),
+          ),
+        ),
+        const VerySmallColumnGap(),
+        SubPanelItem(
+          title: 'Plus Separator',
+          child: Selector<KeyStyleProvider, bool>(
+            selector: (_, keyStyle) => keyStyle.showPlusSeparator,
+            builder: (context, showPlusSeparator, _) => XSwitch(
+              value: showPlusSeparator,
+              onChanged: (value) {
+                context.keyStyle.showPlusSeparator = value;
+              },
+            ),
           ),
         ),
       ],

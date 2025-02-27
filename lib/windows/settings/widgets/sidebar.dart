@@ -3,103 +3,95 @@ import 'package:flutter/material.dart';
 import 'package:keyviz/config/config.dart';
 import 'package:keyviz/windows/shared/shared.dart';
 
-enum SettingsTab {
-  general(VuesaxIcons.cogWheel, "常规"),
-  mouse(VuesaxIcons.mouse, "鼠标"),
-  keycap(VuesaxIcons.keyboard, "键帽"),
-  appearance(VuesaxIcons.monitor, "外观"),
-  about(VuesaxIcons.more, "关于");
+enum SidebarItem {
+  general(VuesaxIcons.cogWheel, "General"),
+  mouse(VuesaxIcons.mouse, "Mouse"),
+  keycap(VuesaxIcons.keyboard, "Keycap"),
+  appearance(VuesaxIcons.monitor, "Appearance"),
+  about(VuesaxIcons.more, "About");
 
-  const SettingsTab(this.icon, this.label);
   final String icon;
   final String label;
+
+  const SidebarItem(this.icon, this.label);
 }
 
-class SideBar extends StatelessWidget {
-  const SideBar({
+class Sidebar extends StatelessWidget {
+  final SidebarItem selectedItem;
+  final ValueChanged<SidebarItem> onItemSelected;
+
+  const Sidebar({
     super.key,
-    required this.currentTab,
-    required this.onChange,
+    required this.selectedItem,
+    required this.onItemSelected,
   });
-
-  final SettingsTab currentTab;
-  final void Function(SettingsTab tab) onChange;
 
   @override
   Widget build(BuildContext context) {
-    final children = <Widget>[];
-    const tabs = SettingsTab.values;
-
-    for (int i = 0; i < tabs.length; i++) {
-      final tab = tabs[i];
-      // position conditions
-      final isFirst = i == 0;
-      final isLast = i == tabs.length - 1;
-
-      // add spacing between buttons
-      if (!isFirst) {
-        // push the About button to the end
-        if (isLast) {
-          children.add(const Spacer());
-        }
-        // add column gap
-        else {
-          children.add(const SizedBox(height: defaultPadding * .25));
-        }
-      }
-
-      // add icon button
-      children.add(
-        _IconButton(
-          icon: tab.icon,
-          // tooltip: tab.name,
-          tooltip: tab.label,
-          onTap: () => onChange(tab),
-          selected: currentTab == tab,
+    return Container(
+      width: 80,
+      decoration: BoxDecoration(
+        color: context.colorScheme.surface,
+        border: Border(
+          right: BorderSide(
+            color: context.colorScheme.outline,
+          ),
         ),
-      );
-    }
-
-    return Column(children: children);
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    required this.selected,
-    this.size = 40.0,
-  });
-
-  final String icon;
-  final String tooltip;
-  final bool selected;
-  final VoidCallback onTap;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      tooltip: tooltip.capitalize(),
-      icon: SvgIcon(
-        size: size * .44,
-        icon: icon,
-        color: selected
-            ? context.colorScheme.primary
-            : context.isDark
-                ? context.colorScheme.outline
-                : context.colorScheme.tertiary,
       ),
-      style: IconButton.styleFrom(
-        fixedSize: Size.square(size),
-        backgroundColor: selected
-            ? context.colorScheme.secondaryContainer
-            : context.colorScheme.secondaryContainer.withOpacity(0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(defaultPadding * .5),
+      child: Column(
+        children: [
+          const SizedBox(height: defaultPadding),
+          for (final item in SidebarItem.values)
+            _buildSidebarItem(context, item),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebarItem(BuildContext context, SidebarItem item) {
+    final isSelected = selectedItem == item;
+
+    return Tooltip(
+      message: item.label,
+      child: InkWell(
+        onTap: () => onItemSelected(item),
+        child: Container(
+          width: double.infinity,
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? context.colorScheme.primaryContainer
+                : Colors.transparent,
+            border: Border(
+              left: BorderSide(
+                width: 3,
+                color: isSelected
+                    ? context.colorScheme.primary
+                    : Colors.transparent,
+              ),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgIcon(
+                icon: item.icon,
+                size: 24,
+                color: isSelected
+                    ? context.colorScheme.primary
+                    : context.colorScheme.onSurface,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                item.label,
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: isSelected
+                      ? context.colorScheme.primary
+                      : context.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

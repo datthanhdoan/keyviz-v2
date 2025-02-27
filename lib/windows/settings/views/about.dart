@@ -7,133 +7,144 @@ import 'package:keyviz/windows/shared/shared.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import '../widgets/widgets.dart';
+
 class AboutView extends StatelessWidget {
   const AboutView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Container(
-              height: 200,
-              width: 180,
-              decoration: BoxDecoration(
-                color: context.colorScheme.primaryContainer,
-                borderRadius: defaultBorderRadius,
-                border: Border.all(color: context.colorScheme.outline),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    "assets/img/logo.svg",
-                    height: defaultPadding * 3.5,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(defaultPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primaryContainer,
+                    borderRadius: defaultBorderRadius,
+                    border: Border.all(color: context.colorScheme.outline),
                   ),
-                  const SmallColumnGap(),
-                  Text(
-                    "Keyviz 2.0.0-alpha2",
-                    style: context.textTheme.titleSmall,
-                  ),
-                  Text(
-                    "作者 Rahul Mula",
-                    style: context.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SmallRowGap(),
-            Expanded(
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: context.colorScheme.primaryContainer,
-                  borderRadius: defaultBorderRadius,
-                  border: Border.all(color: context.colorScheme.outline),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: SvgPicture.asset(
-                        "assets/img/keycap-grid.svg",
-                        width: defaultPadding * 9,
-                        height: defaultPadding * 9,
+                  padding: const EdgeInsets.all(defaultPadding * 1.5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Keyviz",
+                        style: context.textTheme.headlineMedium,
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(
-                        defaultPadding * 1.5,
-                      ).copyWith(right: defaultPadding * 4),
-                      child: Text(
-                        "这是 Alpha 早期测试版，\n出现 bug 🐛 很正常。\n"
-                        "如果遇到任何问题，\n请反馈给我们！",
-                        style: context.textTheme.labelSmall?.copyWith(
-                          fontSize: 14,
-                        ),
+                      const VerySmallColumnGap(),
+                      Text(
+                        "Author: Rahul Mula",
+                        style: context.textTheme.bodyLarge,
                       ),
-                    ),
-                    // Positioned(
-                    //   left: defaultPadding * 1.5,
-                    //   bottom: defaultPadding * 1.5,
-                    //   child: RichText(
-                    //     text: const TextSpan(
-                    //       children: [
-                    //         TextSpan(
-                    //           text: "⌨️",
-                    //           style: TextStyle(fontSize: 40),
-                    //         ),
-                    //         TextSpan(
-                    //           text: "🖱️",
-                    //           style: TextStyle(fontSize: 30),
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
-                    Positioned(
-                      left: defaultPadding * 1.5,
-                      bottom: defaultPadding * 1.5,
-                      child: Row(
+                      const Spacer(),
+                      Row(
                         children: [
                           IconButton(
-                            onPressed: () => launchUrlString(
-                              "https://discord.gg/qyrKWCvtEq",
+                            onPressed: () => _launchUrl(
+                              "https://github.com/mulaRahul/keyviz",
                             ),
-                            tooltip: "Discord",
+                            tooltip: "GitHub",
                             icon: const SvgIcon(
-                              icon: "assets/img/discord-logo.svg",
-                              size: defaultPadding * .8,
+                              icon: VuesaxIcons.github,
+                              size: 24,
                             ),
                           ),
                           IconButton(
-                            onPressed: () => launchUrl(
-                              Uri.parse("mailto:rahulmula10@gmail.com"),
+                            onPressed: () => _launchUrl(
+                              "mailto:rahulmula.1@gmail.com",
                             ),
-                            tooltip: "邮箱",
-                            icon: const SvgIcon(icon: VuesaxIcons.mail),
+                            tooltip: "Email",
+                            icon: const SvgIcon(
+                              icon: VuesaxIcons.message,
+                              size: 24,
+                            ),
                           ),
                         ],
                       ),
-                    )
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SmallColumnGap(),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
+              const SmallRowGap(),
+              Expanded(
+                child: Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primaryContainer,
+                    borderRadius: defaultBorderRadius,
+                    border: Border.all(color: context.colorScheme.outline),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: SvgPicture.asset(
+                          "assets/img/keycap-grid.svg",
+                          width: defaultPadding * 9,
+                          height: defaultPadding * 9,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(
+                          defaultPadding * 1.5,
+                        ).copyWith(right: defaultPadding * 4),
+                        child: Text(
+                          "This is an Alpha early test version,\nbugs 🐛 are expected.\n"
+                          "If you encounter any issues,\nplease report them to us!",
+                          style: context.textTheme.labelSmall?.copyWith(
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SmallColumnGap(),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primaryContainer,
+                    borderRadius: defaultBorderRadius,
+                    border: Border.all(color: context.colorScheme.outline),
+                  ),
+                  padding: const EdgeInsets.all(defaultPadding * 1.5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "💻 Developer's Note",
+                        style: context.textTheme.titleLarge,
+                      ),
+                      const VerySmallColumnGap(),
+                      Text(
+                        "Hello 👋, I'm Rahul Mula, the developer of Keyviz. "
+                        "I'm also an online instructor, teaching courses on the web.\n\n"
+                        "When recording tutorial videos, I often need to show my keyboard actions to viewers. "
+                        "That's why I decided to develop Keyviz, a key visualization software, "
+                        "and share it with everyone, hoping it helps others with similar needs.",
+                        style: context.textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SmallRowGap(),
+              Container(
                 height: 250,
+                width: 200,
                 decoration: BoxDecoration(
                   color: context.colorScheme.primaryContainer,
                   borderRadius: defaultBorderRadius,
@@ -144,74 +155,51 @@ class AboutView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "💻 开发者的话",
+                      "💖 Support",
                       style: context.textTheme.titleLarge,
                     ),
                     const VerySmallColumnGap(),
                     Text(
-                      "你好 👋，我是 Keyviz 的开发者 Rahul Mula。"
-                      "我也是一名线上讲师，在网上教授课程。\n\n"
-                      "在录制教学视频时，我经常需要向观众展示我的键盘操作。"
-                      "因此，我决定开发按键可视化软件 Keyviz，"
-                      "并将其分享给大家，希望能帮助到有类似需求的朋友们。",
+                      "Keyviz is completely free, relying on your generosity to support development. "
+                      "Your support allows me to invest more time and effort into improving this software.",
                       style: context.textTheme.bodyLarge,
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => launchUrlString(
+                            "https://github.com/sponsors/mulaRahul",
+                          ),
+                          tooltip: "Github Sponsors",
+                          icon: const SvgIcon(icon: "assets/img/github-logo.svg"),
+                        ),
+                        IconButton(
+                          onPressed: () => launchUrlString(
+                            "https://opencollective.com/keyviz",
+                          ),
+                          tooltip: "Open Collective",
+                          icon: SvgPicture.asset(
+                            "assets/img/opencollective-logo.svg",
+                            width: defaultPadding,
+                            height: defaultPadding,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ),
-            const SmallRowGap(),
-            Container(
-              height: 250,
-              width: 200,
-              decoration: BoxDecoration(
-                color: context.colorScheme.primaryContainer,
-                borderRadius: defaultBorderRadius,
-                border: Border.all(color: context.colorScheme.outline),
-              ),
-              padding: const EdgeInsets.all(defaultPadding * 1.5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "💖 支持",
-                    style: context.textTheme.titleLarge,
-                  ),
-                  const VerySmallColumnGap(),
-                  Text(
-                    "Keyviz 完全免费，依靠您的慷慨捐助来支持开发。"
-                    "您的支持能让我投入更多时间和精力完善这款软件。",
-                    style: context.textTheme.bodyLarge,
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => launchUrlString(
-                          "https://github.com/sponsors/mulaRahul",
-                        ),
-                        tooltip: "Github Sponsors",
-                        icon: const SvgIcon(icon: "assets/img/github-logo.svg"),
-                      ),
-                      IconButton(
-                        onPressed: () => launchUrlString(
-                          "https://opencollective.com/keyviz",
-                        ),
-                        tooltip: "Open Collective",
-                        icon: SvgPicture.asset(
-                          "assets/img/opencollective-logo.svg",
-                          width: defaultPadding,
-                          height: defaultPadding,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        )
-      ],
+            ],
+          )
+        ],
+      ),
     );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    if (!await launchUrl(Uri.parse(url))) {
+      throw Exception('Could not launch $url');
+    }
   }
 }

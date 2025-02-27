@@ -99,7 +99,7 @@ class _ColorPickerState extends State<ColorPicker> {
           Row(
             children: [
               Text(
-                widget.title ?? "取色器",
+                widget.title ?? "Color Picker",
                 style: context.textTheme.titleSmall?.copyWith(
                   color: context.colorScheme.tertiary,
                 ),
@@ -187,7 +187,7 @@ class _ColorPickerState extends State<ColorPicker> {
                         : VuesaxIcons.clipboard,
                     color: context.colorScheme.tertiary,
                   ),
-                  tooltip: _clipboardCopied ? "已复制" : "复制",
+                  tooltip: _clipboardCopied ? "Copied" : "Copy",
                 ),
               ],
             ),
@@ -249,6 +249,19 @@ class _ColorPickerState extends State<ColorPicker> {
                 ),
               ],
             ),
+          ),
+          const VerySmallColumnGap(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  "Close",
+                  style: context.textTheme.labelLarge,
+                ),
+              ),
+            ],
           ),
         ],
       ),

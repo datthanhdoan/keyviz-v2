@@ -24,16 +24,40 @@ class StyleTabView extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: defaultPadding * .5),
           child: PanelItem(
-            title: "预设",
+            title: "Presets",
             action: Selector<KeyStyleProvider, KeyCapStyle>(
-              selector: (_, keyStyle) => keyStyle.keyCapStyle,
-              builder: (context, preset, _) {
-                return XDropdown<KeyCapStyle>(
-                  value: preset,
-                  options: KeyCapStyle.values,
-                  onChanged: (value) => context.keyStyle.keyCapStyle = value,
-                );
-              },
+              selector: (_, keyStyle) => keyStyle.style,
+              builder: (context, style, _) => Row(
+                children: [
+                  for (final value in KeyCapStyle.values)
+                    Tooltip(
+                      message: value.toString(),
+                      child: TextButton(
+                        onPressed: () {
+                          context.keyStyle.style = value;
+                        },
+                        style: TextButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: defaultPadding * .25,
+                            horizontal: defaultPadding * .5,
+                          ),
+                        ),
+                        child: Text(
+                          value.toString(),
+                          style: context.textTheme.labelMedium?.copyWith(
+                            color: value == style
+                                ? context.colorScheme.primary
+                                : context.colorScheme.tertiary,
+                            fontWeight: value == style
+                                ? FontWeight.w700
+                                : FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -44,7 +68,7 @@ class StyleTabView extends StatelessWidget {
         div,
         Selector<KeyStyleProvider, bool>(
           selector: (_, keyStyle) {
-            return keyStyle.keyCapStyle == KeyCapStyle.minimal;
+            return keyStyle.style == KeyCapStyle.minimal;
           },
           builder: (_, isMinimal, __) {
             return isMinimal
