@@ -9,7 +9,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
@@ -36,16 +36,21 @@ jobs:
           cache: true
           cache-key: flutter-:os:-:channel:-:version:-:arch:-:hash:-${{ hashFiles('**/pubspec.lock') }}
 
-      - name: Build for ${{ matrix.os }}
+      - name: Install Flutter dependencies
         run: |
           flutter config --no-analytics
           flutter doctor -v
+          flutter pub get
+        shell: bash
+
+      - name: Build for ${{ matrix.os }}
+        run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            flutter build linux
+            flutter build linux --verbose
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            flutter build macos
+            flutter build macos --verbose
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            flutter build windows
+            flutter build windows --verbose
           fi
         shell: bash
 
