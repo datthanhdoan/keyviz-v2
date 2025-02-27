@@ -236,9 +236,10 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     notifyListeners();
   }
 
-  set filterHotkeys(value) {
+  set filterHotkeys(bool value) {
     _filterHotkeys = value;
     notifyListeners();
+    _saveSettings();
   }
 
   void setModifierKeyIgnoring(ModifierKey key, bool ingnoring) {
@@ -249,36 +250,43 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
   set historyMode(VisualizationHistoryMode value) {
     _historyMode = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set lingerDurationInSeconds(int value) {
     _lingerDurationInSeconds = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set animationSpeed(value) {
     _animationSpeed = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set keyCapAnimation(KeyCapAnimationType value) {
     _keyCapAnimation = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set showMouseClicks(bool value) {
     _showMouseClicks = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set highlightCursor(bool value) {
     _highlightCursor = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set showMouseEvents(bool value) {
     _showMouseEvents = value;
     notifyListeners();
+    _saveSettings();
   }
 
   _toggleVisualizer() {
@@ -751,13 +759,36 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
       return;
     }
 
+    // Thêm hiệu ứng fade out trước khi ẩn hoàn toàn
     if (!noKeyCapAnimation) {
+      // Giảm dần opacity từ 1.0 xuống 0.0
+      const fadeSteps = 5;
+      final fadeStepDuration = animationDuration.inMilliseconds ~/ fadeSteps;
+      
+      for (int i = 1; i <= fadeSteps; i++) {
+        final opacity = (1.0 - (i / fadeSteps)).clamp(0.0, 1.0);
+        _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: opacity);
+        notifyListeners();
+        await Future.delayed(Duration(milliseconds: fadeStepDuration));
+      }
+      
       // animate out the key event
       _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(show: false);
       notifyListeners();
 
       // wait for animation to finish
       await Future.delayed(animationDuration);
+    }
+    
+    // Thêm hiệu ứng fade out trước khi xóa phím bấm
+    const fadeOutSteps = 5;
+    final fadeOutStepDuration = animationDuration.inMilliseconds ~/ fadeOutSteps;
+    
+    for (int i = 1; i <= fadeOutSteps; i++) {
+      final opacity = (1.0 - (i / fadeOutSteps)).clamp(0.0, 1.0);
+      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: opacity);
+      notifyListeners();
+      await Future.delayed(Duration(milliseconds: fadeOutStepDuration));
     }
 
     // remove key event
@@ -1025,6 +1056,30 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     _showMouseEvents = _Defaults.showMouseEvents;
 
     notifyListeners();
+    
+    // Lưu cài đặt sau khi khôi phục về mặc định
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _getGlobalContext();
+      if (context != null) {
+        Vault.save(context);
+      }
+    });
+  }
+
+  BuildContext? _getGlobalContext() {
+    // Sử dụng cách khác để lấy context
+    try {
+      // Thử sử dụng rootElement nếu có thể truy cập
+      final rootElement = WidgetsBinding.instance.rootElement;
+      if (rootElement != null) {
+        return rootElement;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('Không thể lấy context: $e');
+      return null;
+    }
   }
 
   @override
@@ -1033,6 +1088,16 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     _removeKeyboardListener();
     trayManager.removeListener(this);
     super.dispose();
+  }
+
+  // Phương thức để lưu cài đặt
+  _saveSettings() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _getGlobalContext();
+      if (context != null) {
+        Vault.save(context);
+      }
+    });
   }
 }
 

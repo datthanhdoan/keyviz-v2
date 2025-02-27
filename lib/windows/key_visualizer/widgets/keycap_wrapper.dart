@@ -20,6 +20,7 @@ class KeyCapWrapper extends StatelessWidget {
             ? const SizedBox()
             : _AnimationWrapper(
                 show: event.show,
+                opacity: event.opacity,
                 child: _KeyCap(event),
               );
       },
@@ -29,28 +30,41 @@ class KeyCapWrapper extends StatelessWidget {
 }
 
 class _AnimationWrapper extends StatelessWidget {
-  const _AnimationWrapper({required this.show, required this.child});
+  const _AnimationWrapper({
+    required this.show,
+    required this.opacity,
+    required this.child,
+  });
 
   final bool show;
+  final double opacity;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    switch (context.read<KeyEventProvider>().keyCapAnimation) {
+    final animation = context.read<KeyEventProvider>().keyCapAnimation;
+    
+    // Bọc widget con trong Opacity để áp dụng hiệu ứng fade
+    final wrappedChild = Opacity(
+      opacity: opacity,
+      child: child,
+    );
+    
+    switch (animation) {
       case KeyCapAnimationType.none:
-        return child;
+        return wrappedChild;
 
       case KeyCapAnimationType.fade:
-        return FadeKeyCapAnimation(show: show, child: child);
+        return FadeKeyCapAnimation(show: show, child: wrappedChild);
 
       case KeyCapAnimationType.slide:
-        return SlideKeyCapAnimation(show: show, child: child);
+        return SlideKeyCapAnimation(show: show, child: wrappedChild);
 
       case KeyCapAnimationType.grow:
-        return GrowKeyCapAnimation(show: show, child: child);
+        return GrowKeyCapAnimation(show: show, child: wrappedChild);
 
       case KeyCapAnimationType.wham:
-        return WhamKeyCapAnimation(show: show, child: child);
+        return WhamKeyCapAnimation(show: show, child: wrappedChild);
     }
   }
 }

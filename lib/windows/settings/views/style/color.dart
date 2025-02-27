@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 import 'package:keyviz/config/config.dart';
-import 'package:keyviz/providers/key_style.dart';
+import 'package:keyviz/providers/providers.dart';
 import 'package:keyviz/windows/shared/shared.dart';
 
 import '../../widgets/widgets.dart';
@@ -18,65 +18,21 @@ class ColorView extends StatelessWidget {
       children: [
         SubPanelItem(
           title: "Fill Type",
-          child: Selector<KeyStyleProvider, FillType>(
-            selector: (_, keyStyle) => keyStyle.fillType,
-            builder: (context, fillType, _) => Row(
-              children: [
-                Tooltip(
-                  message: "Solid",
-                  child: TextButton(
-                    onPressed: () {
-                      context.keyStyle.fillType = FillType.solid;
-                    },
-                    style: TextButton.styleFrom(
-                      minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: defaultPadding * .25,
-                        horizontal: defaultPadding * .5,
-                      ),
-                    ),
-                    child: Text(
-                      "Solid",
-                      style: context.textTheme.labelMedium?.copyWith(
-                        color: fillType == FillType.solid
-                            ? context.colorScheme.primary
-                            : context.colorScheme.tertiary,
-                        fontWeight: fillType == FillType.solid
-                            ? FontWeight.w700
-                            : FontWeight.w300,
-                      ),
-                    ),
-                  ),
-                ),
-                const SmallRowGap(),
-                Tooltip(
-                  message: "Gradient",
-                  child: TextButton(
-                    onPressed: () {
-                      context.keyStyle.fillType = FillType.gradient;
-                    },
-                    style: TextButton.styleFrom(
-                      minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: defaultPadding * .25,
-                        horizontal: defaultPadding * .5,
-                      ),
-                    ),
-                    child: Text(
-                      "Gradient",
-                      style: context.textTheme.labelMedium?.copyWith(
-                        color: fillType == FillType.gradient
-                            ? context.colorScheme.primary
-                            : context.colorScheme.tertiary,
-                        fontWeight: fillType == FillType.gradient
-                            ? FontWeight.w700
-                            : FontWeight.w300,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          child: SegmentedButton<FillType>(
+            segments: const [
+              ButtonSegment(
+                value: FillType.solid,
+                label: Text("Solid"),
+              ),
+              ButtonSegment(
+                value: FillType.gradient,
+                label: Text("Gradient"),
+              ),
+            ],
+            selected: {context.watch<KeyStyleProvider>().fillType},
+            onSelectionChanged: (selected) {
+              context.read<KeyStyleProvider>().fillType = selected.first;
+            },
           ),
         ),
         const VerySmallColumnGap(),
@@ -100,13 +56,13 @@ class ColorView extends StatelessWidget {
                 IconButton(
                   tooltip: differentColors ? "Use Same Color" : "Use Different Color",
                   onPressed: () {
-                    context.keyStyle.differentColorForModifiers =
+                    context.read<KeyStyleProvider>().differentColorForModifiers =
                         !differentColors;
                   },
                   icon: SvgIcon(
                     icon: differentColors
-                        ? VuesaxIcons.link
-                        : VuesaxIcons.linkBroken,
+                        ? "assets/icons/link.svg"
+                        : "assets/icons/link-broken.svg",
                   ),
                 ),
                 const VerySmallRowGap(),

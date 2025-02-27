@@ -175,6 +175,7 @@ class KeyEventData {
     this.show = false,
     this.pressed = true,
     this.pressedCount = 1,
+    this.opacity = 1.0,
   });
 
   // pressed state of the key
@@ -186,6 +187,9 @@ class KeyEventData {
 
   // the animation in/out state of this key
   final bool show;
+  
+  // opacity value for fade effect
+  final double opacity;
 
   // logical representation of the KeyEvent
   final RawKeyEvent rawEvent;
@@ -251,12 +255,13 @@ class KeyEventData {
   // returns null if doesn't has associated icon
   String? get icon => keymaps[_id]?.icon;
 
-  KeyEventData copyWith({bool? show, bool? pressed, int? pressedCount}) {
+  KeyEventData copyWith({bool? show, bool? pressed, int? pressedCount, double? opacity}) {
     return KeyEventData(
       rawEvent,
       show: show ?? this.show,
       pressed: pressed ?? this.pressed,
       pressedCount: pressedCount ?? this.pressedCount,
+      opacity: opacity ?? this.opacity,
     );
   }
 
@@ -265,13 +270,14 @@ class KeyEventData {
     return other is KeyEventData &&
         other.show == show &&
         other.pressed == pressed &&
+        other.opacity == opacity &&
         other.pressedCount == pressedCount;
   }
 
   @override
-  int get hashCode => Object.hash(pressed, pressedCount, show);
+  int get hashCode => Object.hash(pressed, pressedCount, show, opacity);
 
   @override
   String toString() =>
-      "${pressed ? '⬇️' : '⬆️'}[$label](${show ? '🟢' : '🔴'})";
+      "${pressed ? '⬇️' : '⬆️'}[$label](${show ? '🟢' : '🔴'}) opacity: $opacity";
 }

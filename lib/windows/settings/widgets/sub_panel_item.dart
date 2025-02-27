@@ -627,13 +627,12 @@ class ColorPickerButton extends StatelessWidget {
     return InkWell(
       onTap: () => _showColorPicker(context),
       child: Container(
-        height: 32,
+        width: 40,
+        height: 24,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(defaultPadding * .25),
-          border: Border.all(
-            color: context.colorScheme.outline,
-          ),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: context.colorScheme.outline),
         ),
       ),
     );

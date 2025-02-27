@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:keyviz/config/config.dart';
-import 'package:keyviz/providers/key_style.dart';
+import 'package:keyviz/providers/providers.dart';
 import 'package:keyviz/windows/shared/shared.dart';
+import 'package:keyviz/windows/settings/widgets/widgets.dart';
 
 import '../../widgets/widgets.dart';
 import 'typography.dart';
@@ -17,69 +18,48 @@ class StyleTabView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const div = Divider(height: defaultPadding);
-
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: defaultPadding * .5),
-          child: PanelItem(
-            title: "Presets",
-            action: Selector<KeyStyleProvider, KeyCapStyle>(
-              selector: (_, keyStyle) => keyStyle.style,
-              builder: (context, style, _) => Row(
-                children: [
-                  for (final value in KeyCapStyle.values)
-                    Tooltip(
-                      message: value.toString(),
-                      child: TextButton(
-                        onPressed: () {
-                          context.keyStyle.style = value;
-                        },
-                        style: TextButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: defaultPadding * .25,
-                            horizontal: defaultPadding * .5,
-                          ),
-                        ),
-                        child: Text(
-                          value.toString(),
-                          style: context.textTheme.labelMedium?.copyWith(
-                            color: value == style
-                                ? context.colorScheme.primary
-                                : context.colorScheme.tertiary,
-                            fontWeight: value == style
-                                ? FontWeight.w700
-                                : FontWeight.w300,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+        Text("Keycap", style: context.textTheme.titleMedium),
+        const SmallColumnGap(),
+        SubPanelItem(
+          title: "Presets",
+          child: SegmentedButton<KeyCapStyle>(
+            segments: const [
+              ButtonSegment(
+                value: KeyCapStyle.minimal,
+                label: Text("Minimal"),
               ),
-            ),
+              ButtonSegment(
+                value: KeyCapStyle.flat,
+                label: Text("Flat"),
+              ),
+              ButtonSegment(
+                value: KeyCapStyle.elevated,
+                label: Text("Elevated"),
+              ),
+              ButtonSegment(
+                value: KeyCapStyle.plastic,
+                label: Text("Plastic"),
+              ),
+              ButtonSegment(
+                value: KeyCapStyle.mechanical,
+                label: Text("Mechanical"),
+              ),
+            ],
+            selected: {context.watch<KeyStyleProvider>().keyCapStyle},
+            onSelectionChanged: (selected) {
+              context.read<KeyStyleProvider>().keyCapStyle = selected.first;
+            },
           ),
         ),
-        div,
-        const TypographyView(),
-        div,
-        const LayoutView(),
-        div,
-        Selector<KeyStyleProvider, bool>(
-          selector: (_, keyStyle) {
-            return keyStyle.style == KeyCapStyle.minimal;
-          },
-          builder: (_, isMinimal, __) {
-            return isMinimal
-                ? const SizedBox()
-                : const Column(
-                    children: [ColorView(), div, BorderView(), div],
-                  );
-          },
-        ),
-        const BackgroundView(),
         const SmallColumnGap(),
+        const ColorView(),
+        const SmallColumnGap(),
+        const LayoutView(),
+        const SmallColumnGap(),
+        const TypographyView(),
       ],
     );
   }

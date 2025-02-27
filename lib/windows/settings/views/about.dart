@@ -51,7 +51,7 @@ class AboutView extends StatelessWidget {
                             ),
                             tooltip: "GitHub",
                             icon: const SvgIcon(
-                              icon: VuesaxIcons.github,
+                              icon: "assets/icons/github.svg",
                               size: 24,
                             ),
                           ),
@@ -61,7 +61,7 @@ class AboutView extends StatelessWidget {
                             ),
                             tooltip: "Email",
                             icon: const SvgIcon(
-                              icon: VuesaxIcons.message,
+                              icon: "assets/icons/message.svg",
                               size: 24,
                             ),
                           ),
@@ -172,7 +172,7 @@ class AboutView extends StatelessWidget {
                             "https://github.com/sponsors/mulaRahul",
                           ),
                           tooltip: "Github Sponsors",
-                          icon: const SvgIcon(icon: "assets/img/github-logo.svg"),
+                          icon: const SvgIcon(icon: "assets/icons/github.svg"),
                         ),
                         IconButton(
                           onPressed: () => launchUrlString(

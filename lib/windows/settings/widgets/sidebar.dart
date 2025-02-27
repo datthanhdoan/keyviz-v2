@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:keyviz/config/config.dart';
 import 'package:keyviz/windows/shared/shared.dart';
 
-enum SidebarItem {
+enum SettingsTab {
   general(VuesaxIcons.cogWheel, "General"),
   mouse(VuesaxIcons.mouse, "Mouse"),
   keycap(VuesaxIcons.keyboard, "Keycap"),
@@ -13,17 +13,17 @@ enum SidebarItem {
   final String icon;
   final String label;
 
-  const SidebarItem(this.icon, this.label);
+  const SettingsTab(this.icon, this.label);
 }
 
-class Sidebar extends StatelessWidget {
-  final SidebarItem selectedItem;
-  final ValueChanged<SidebarItem> onItemSelected;
+class SideBar extends StatelessWidget {
+  final SettingsTab currentTab;
+  final ValueChanged<SettingsTab> onChange;
 
-  const Sidebar({
+  const SideBar({
     super.key,
-    required this.selectedItem,
-    required this.onItemSelected,
+    required this.currentTab,
+    required this.onChange,
   });
 
   @override
@@ -41,20 +41,20 @@ class Sidebar extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: defaultPadding),
-          for (final item in SidebarItem.values)
+          for (final item in SettingsTab.values)
             _buildSidebarItem(context, item),
         ],
       ),
     );
   }
 
-  Widget _buildSidebarItem(BuildContext context, SidebarItem item) {
-    final isSelected = selectedItem == item;
+  Widget _buildSidebarItem(BuildContext context, SettingsTab item) {
+    final isSelected = currentTab == item;
 
     return Tooltip(
       message: item.label,
       child: InkWell(
-        onTap: () => onItemSelected(item),
+        onTap: () => onChange(item),
         child: Container(
           width: double.infinity,
           height: 60,

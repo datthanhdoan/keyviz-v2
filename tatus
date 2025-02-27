@@ -1,0 +1,5 @@
+ lib/providers/key_event.dart                       | 12 [32m++++[m
+ lib/providers/key_event_data.dart                  | 12 [32m+++[m[31m-[m
+ lib/windows/key_visualizer/key_visualizer.dart     | 71 [32m++++++++++++++++++++[m[31m--[m
+ .../key_visualizer/widgets/keycap_wrapper.dart     | 28 [32m++++++[m[31m---[m
+ 4 files changed, 108 insertions(+), 15 deletions(-)

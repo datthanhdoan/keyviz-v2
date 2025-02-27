@@ -610,3 +610,63 @@ class _HuePicker extends StatelessWidget {
     }
   }
 }
+
+class ColorPickerDialog extends StatefulWidget {
+  final String? title;
+  final Color initialColor;
+  final ValueChanged<Color> onColorChanged;
+
+  const ColorPickerDialog({
+    super.key,
+    this.title,
+    required this.initialColor,
+    required this.onColorChanged,
+  });
+
+  @override
+  State<ColorPickerDialog> createState() => _ColorPickerDialogState();
+}
+
+class _ColorPickerDialogState extends State<ColorPickerDialog> {
+  late Color _selectedColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedColor = widget.initialColor;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title ?? 'Color Picker'),
+      content: SingleChildScrollView(
+        child: ColorPicker(
+          show: true,
+          title: widget.title,
+          initialColor: widget.initialColor,
+          onChanged: (color) {
+            setState(() {
+              _selectedColor = color;
+            });
+          },
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            widget.onColorChanged(_selectedColor);
+            Navigator.of(context).pop();
+          },
+          child: Text('OK'),
+        ),
+      ],
+    );
+  }
+}

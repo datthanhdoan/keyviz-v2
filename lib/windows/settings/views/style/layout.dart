@@ -2,115 +2,85 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:keyviz/config/config.dart';
-import 'package:keyviz/providers/key_style.dart';
+import 'package:keyviz/providers/providers.dart';
 import 'package:keyviz/windows/shared/shared.dart';
-
-import '../../widgets/widgets.dart';
+import 'package:keyviz/windows/settings/widgets/widgets.dart';
 
 class LayoutView extends StatelessWidget {
   const LayoutView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return XExpansionTile(
-      title: "Layout",
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Selector<KeyStyleProvider, bool>(
-          selector: (_, keyStyle) => keyStyle.showBorder,
-          builder: (context, showBorder, _) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SubPanelItem(
-                title: "Border",
-                child: XSwitch(
-                  value: showBorder,
-                  onChanged: (value) {
-                    context.keyStyle.showBorder = value;
-                  },
-                ),
-              ),
-              if (showBorder) ...[
-                const VerySmallColumnGap(),
-                SubPanelItem(
-                  title: "Border Width",
-                  child: Selector<KeyStyleProvider, double>(
-                    selector: (_, keyStyle) => keyStyle.borderWidth,
-                    builder: (context, borderWidth, _) => XSlider(
-                      max: 10,
-                      suffix: "px",
-                      value: borderWidth,
-                      onChanged: (value) {
-                        context.keyStyle.borderWidth = value;
-                      },
-                    ),
-                  ),
-                ),
-                const VerySmallColumnGap(),
-                SubPanelItem(
-                  title: "Border Radius",
-                  child: Selector<KeyStyleProvider, double>(
-                    selector: (_, keyStyle) => keyStyle.borderRadius,
-                    builder: (context, borderRadius, _) => XSlider(
-                      max: 32,
-                      suffix: "px",
-                      value: borderRadius,
-                      onChanged: (value) {
-                        context.keyStyle.borderRadius = value;
-                      },
-                    ),
-                  ),
-                ),
-                const VerySmallColumnGap(),
-                SubPanelItem(
-                  title: "Border Color",
-                  child: ColorPickerButton(
-                    color: context.keyStyle.borderColor,
-                    onColorChanged: (color) {
-                      context.keyStyle.borderColor = color;
-                    },
-                  ),
-                ),
-              ],
-            ],
+        Text("Layout", style: context.textTheme.titleMedium),
+        const SmallColumnGap(),
+        SubPanelItem(
+          title: "Border",
+          child: Switch(
+            value: context.watch<KeyStyleProvider>().showBorder,
+            onChanged: (value) {
+              context.read<KeyStyleProvider>().showBorder = value;
+            },
           ),
         ),
-        const VerySmallColumnGap(),
+        const SmallColumnGap(),
         SubPanelItem(
-          title: "Icons",
-          child: Selector<KeyStyleProvider, bool>(
-            selector: (_, keyStyle) => keyStyle.showIcons,
-            builder: (context, showIcons, _) => XSwitch(
-              value: showIcons,
-              onChanged: (value) {
-                context.keyStyle.showIcons = value;
-              },
-            ),
+          title: "Border Radius",
+          child: Slider(
+            min: 0,
+            max: 20,
+            divisions: 20,
+            value: context.watch<KeyStyleProvider>().borderRadius.topLeft.x,
+            onChanged: (value) {
+              context.read<KeyStyleProvider>().borderRadius = BorderRadius.circular(value);
+            },
           ),
         ),
-        const VerySmallColumnGap(),
+        const SmallColumnGap(),
         SubPanelItem(
-          title: "Symbols",
-          child: Selector<KeyStyleProvider, bool>(
-            selector: (_, keyStyle) => keyStyle.showSymbols,
-            builder: (context, showSymbols, _) => XSwitch(
-              value: showSymbols,
-              onChanged: (value) {
-                context.keyStyle.showSymbols = value;
-              },
-            ),
+          title: "Border Width",
+          child: Slider(
+            min: 0,
+            max: 5,
+            divisions: 10,
+            value: context.watch<KeyStyleProvider>().borderWidth,
+            onChanged: (value) {
+              context.read<KeyStyleProvider>().borderWidth = value;
+            },
           ),
         ),
-        const VerySmallColumnGap(),
+        const SmallColumnGap(),
+        Text("Icons", style: context.textTheme.titleMedium),
+        const SmallColumnGap(),
         SubPanelItem(
-          title: 'Plus Separator',
-          child: Selector<KeyStyleProvider, bool>(
-            selector: (_, keyStyle) => keyStyle.showPlusSeparator,
-            builder: (context, showPlusSeparator, _) => XSwitch(
-              value: showPlusSeparator,
-              onChanged: (value) {
-                context.keyStyle.showPlusSeparator = value;
-              },
-            ),
+          title: "Show Icons",
+          child: Switch(
+            value: context.watch<KeyStyleProvider>().showIcons,
+            onChanged: (value) {
+              context.read<KeyStyleProvider>().showIcons = value;
+            },
+          ),
+        ),
+        const SmallColumnGap(),
+        SubPanelItem(
+          title: "Show Symbols",
+          child: Switch(
+            value: context.watch<KeyStyleProvider>().showSymbols,
+            onChanged: (value) {
+              context.read<KeyStyleProvider>().showSymbols = value;
+            },
+          ),
+        ),
+        const SmallColumnGap(),
+        SubPanelItem(
+          title: "Show Plus Separator",
+          child: Switch(
+            value: context.watch<KeyStyleProvider>().showPlusSeparator,
+            onChanged: (value) {
+              context.read<KeyStyleProvider>().showPlusSeparator = value;
+            },
           ),
         ),
       ],

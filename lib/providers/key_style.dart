@@ -3,6 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:keyviz/config/config.dart';
 import 'package:keyviz/domain/vault/vault.dart';
 
+// fill type for the keycap
+enum FillType {
+  solid("Solid"),
+  gradient("Gradient");
+
+  const FillType(this.label);
+  final String label;
+
+  @override
+  String toString() => label;
+}
+
 // base preset of the keycap
 enum KeyCapStyle {
   minimal("Minimal"),
@@ -50,9 +62,9 @@ enum ModifierTextLength {
 
 // alignment in vertical axis
 enum VerticalAlignment {
-  top(VuesaxIcons.alignTop, "Top"),
-  center(VuesaxIcons.alignVertically, "Center"),
-  bottom(VuesaxIcons.alignBottom, "Bottom");
+  top("assets/icons/align-top.svg", "Top"),
+  center("assets/icons/align-vertically.svg", "Center"),
+  bottom("assets/icons/align-bottom.svg", "Bottom");
 
   const VerticalAlignment(this.iconName, this.label);
   final String iconName;
@@ -61,9 +73,9 @@ enum VerticalAlignment {
 
 // alignment in horizontal axis
 enum HorizontalAlignment {
-  left(VuesaxIcons.alignLeft, "Left"),
-  center(VuesaxIcons.alignHorizontally, "Center"),
-  right(VuesaxIcons.alignRight, "Right");
+  left("assets/icons/align-left.svg", "Left"),
+  center("assets/icons/align-horizontally.svg", "Center"),
+  right("assets/icons/align-right.svg", "Right");
 
   const HorizontalAlignment(this.iconName, this.label);
   final String iconName;
@@ -131,6 +143,9 @@ class KeyStyleProvider extends ChangeNotifier {
   // ----- Color -----
   // fill type of the containers
   bool _isGradient = false;
+  
+  // Fill type enum
+  FillType _fillType = FillType.solid;
 
   // using different color modifier keys
   bool _differentColorForModifiers = false;
@@ -157,6 +172,10 @@ class KeyStyleProvider extends ChangeNotifier {
   Color _mSecondaryColor1 = Colors.deepPurple;
   // second color for gradient
   Color _mSecondaryColor2 = Colors.deepPurple;
+  
+  // Link colors
+  Color _linkColor = Colors.blue;
+  Color _linkBrokenColor = Colors.red;
 
   // ----- Border -----
   // add border to the keycap containers
@@ -174,6 +193,9 @@ class KeyStyleProvider extends ChangeNotifier {
   // border radius value as percentage
   // 0 - sharp corner, 1.0 - totally circle
   double _cornerSmoothing = .4;
+  
+  // Border radius
+  BorderRadius _borderRadius = BorderRadius.circular(8);
 
   // ----- Background -----
   // background container enabled
@@ -184,6 +206,9 @@ class KeyStyleProvider extends ChangeNotifier {
 
   // background color opacity from 0.0 -> 1.0
   double _backgroundOpacity = 1.0;
+  
+  // Foreground color
+  Color _foregroundColor = Colors.black;
 
   // ----- Appearance -----
   // alignment of the visualization
@@ -191,6 +216,9 @@ class KeyStyleProvider extends ChangeNotifier {
 
   // margin from the edge of the screen in px/pixels
   double _margin = 128;
+  
+  // Background spacing
+  double _backgroundSpacing = 8.0;
 
   // ----- Mouse -----
   // mouse click animation type
@@ -198,6 +226,18 @@ class KeyStyleProvider extends ChangeNotifier {
 
   // mouse click border color
   Color _clickColor = Colors.grey[100]!;
+  
+  // Show border
+  bool _showBorder = true;
+  
+  // Show icons
+  bool _showIcons = true;
+  
+  // Show symbols
+  bool _showSymbols = true;
+  
+  // Show plus separator
+  bool _showPlusSeparator = false;
 
   KeyCapStyle get keyCapStyle => _keyCapStyle;
 
@@ -211,6 +251,71 @@ class KeyStyleProvider extends ChangeNotifier {
 
   VerticalAlignment get verticalAlignment => _verticalAlignment;
   HorizontalAlignment get horizontalAlignment => _horizontalAlignment;
+  
+  // Getters for new properties
+  FillType get fillType => _fillType;
+  set fillType(FillType value) {
+    _fillType = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  Color get foregroundColor => _foregroundColor;
+  set foregroundColor(Color value) {
+    _foregroundColor = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  Color get linkColor => _linkColor;
+  set linkColor(Color value) {
+    _linkColor = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  Color get linkBrokenColor => _linkBrokenColor;
+  set linkBrokenColor(Color value) {
+    _linkBrokenColor = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  bool get showBorder => _showBorder;
+  set showBorder(bool value) {
+    _showBorder = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  bool get showIcons => _showIcons;
+  set showIcons(bool value) {
+    _showIcons = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  bool get showSymbols => _showSymbols;
+  set showSymbols(bool value) {
+    _showSymbols = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  bool get showPlusSeparator => _showPlusSeparator;
+  set showPlusSeparator(bool value) {
+    _showPlusSeparator = value;
+    notifyListeners();
+    _saveSettings();
+  }
+  
+  double get backgroundSpacing => _backgroundSpacing;
+  set backgroundSpacing(double value) {
+    _backgroundSpacing = value;
+    notifyListeners();
+    _saveSettings();
+  }
+
   Alignment get childrenAlignment {
     switch (_verticalAlignment) {
       case VerticalAlignment.top:
@@ -288,7 +393,6 @@ class KeyStyleProvider extends ChangeNotifier {
   Color get backgroundColorWithOpacity =>
       _backgroundColor.withOpacity(_backgroundOpacity);
   double get backgroundOpacity => _backgroundOpacity;
-  double get backgroundSpacing => _fontSize * .5;
 
   Alignment get alignment => _alignment;
   double get margin => _margin;
@@ -432,6 +536,12 @@ class KeyStyleProvider extends ChangeNotifier {
         return BorderRadius.zero;
     }
   }
+  
+  set borderRadius(BorderRadius value) {
+    _borderRadius = value;
+    notifyListeners();
+    _saveSettings();
+  }
 
   BorderRadius get outerBorderRadius {
     switch (_keyCapStyle) {
@@ -524,31 +634,37 @@ class KeyStyleProvider extends ChangeNotifier {
         break;
     }
     notifyListeners();
+    _saveSettings();
   }
 
   set differentColorForModifiers(bool value) {
     _differentColorForModifiers = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set fontSize(double value) {
     _fontSize = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set fontColor(Color value) {
     _fontColor = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set mFontColor(Color value) {
     _mFontColor = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set textCap(TextCap value) {
     _textCap = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set modifierTextLength(ModifierTextLength value) {
@@ -557,106 +673,127 @@ class KeyStyleProvider extends ChangeNotifier {
       _showIcon = true;
     }
     notifyListeners();
+    _saveSettings();
   }
 
   set verticalAlignment(VerticalAlignment value) {
     _verticalAlignment = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set horizontalAlignment(HorizontalAlignment value) {
     _horizontalAlignment = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set showIcon(value) {
     _showIcon = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set showSymbol(value) {
     _showSymbol = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set addPlusSeparator(value) {
     _addPlusSeparator = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set isGradient(bool value) {
     _isGradient = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set primaryColor1(Color value) {
     _primaryColor1 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set primaryColor2(Color value) {
     _primaryColor2 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set secondaryColor1(Color value) {
     _secondaryColor1 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set secondaryColor2(Color value) {
     _secondaryColor2 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set mPrimaryColor1(Color value) {
     _mPrimaryColor1 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set mPrimaryColor2(Color value) {
     _mPrimaryColor2 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set mSecondaryColor1(Color value) {
     _mSecondaryColor1 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set mSecondaryColor2(Color value) {
     _mSecondaryColor2 = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set borderEnabled(bool value) {
     _borderEnabled = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set borderColor(Color value) {
     _borderColor = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set mBorderColor(Color value) {
     _mBorderColor = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set borderWidth(value) {
     _borderWidth = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set cornerSmoothing(value) {
     _cornerSmoothing = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set backgroundEnabled(bool value) {
     _backgroundEnabled = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set backgroundColor(Color value) {
@@ -674,31 +811,37 @@ class KeyStyleProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
+    _saveSettings();
   }
 
   set backgroundOpacity(double value) {
     _backgroundOpacity = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set clickAnimation(MouseClickAnimation value) {
     _clickAnimation = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set clickColor(Color value) {
     _clickColor = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set alignment(Alignment value) {
     _alignment = value;
     notifyListeners();
+    _saveSettings();
   }
 
   set margin(double value) {
     _margin = value;
     notifyListeners();
+    _saveSettings();
   }
 
   Map<String, dynamic> get toJson => {
@@ -966,6 +1109,35 @@ class KeyStyleProvider extends ChangeNotifier {
     _clickColor = _Defaults.clickColor;
 
     notifyListeners();
+    
+    // Lưu cài đặt sau khi khôi phục về mặc định
+    _saveSettings();
+  }
+  
+  // Phương thức để lưu cài đặt
+  _saveSettings() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _getGlobalContext();
+      if (context != null) {
+        Vault.save(context);
+      }
+    });
+  }
+  
+  BuildContext? _getGlobalContext() {
+    // Sử dụng cách khác để lấy context
+    try {
+      // Thử sử dụng rootElement nếu có thể truy cập
+      final rootElement = WidgetsBinding.instance.rootElement;
+      if (rootElement != null) {
+        return rootElement;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('Không thể lấy context: $e');
+      return null;
+    }
   }
 }
 
