@@ -176,6 +176,7 @@ class KeyEventData {
     this.pressed = true,
     this.pressedCount = 1,
     this.opacity = 1.0,
+    this.showPressCount = false,
   });
 
   // pressed state of the key
@@ -194,12 +195,9 @@ class KeyEventData {
   // logical representation of the KeyEvent
   final RawKeyEvent rawEvent;
 
-  int get _id => rawEvent.logicalKey.keyId;
+  final bool showPressCount;
 
-  // set pressed(bool value) {
-  //   _pressed = value;
-  //   if (_pressed) _pressedCount++;
-  // }
+  int get _id => rawEvent.logicalKey.keyId;
 
   // The event is a modifier like control, command, etc.
   bool get isModifier => _modifiers.contains(rawEvent.logicalKey);
@@ -255,13 +253,20 @@ class KeyEventData {
   // returns null if doesn't has associated icon
   String? get icon => keymaps[_id]?.icon;
 
-  KeyEventData copyWith({bool? show, bool? pressed, int? pressedCount, double? opacity}) {
+  KeyEventData copyWith({
+    bool? show,
+    bool? pressed,
+    int? pressedCount,
+    double? opacity,
+    bool? showPressCount,
+  }) {
     return KeyEventData(
       rawEvent,
       show: show ?? this.show,
       pressed: pressed ?? this.pressed,
       pressedCount: pressedCount ?? this.pressedCount,
       opacity: opacity ?? this.opacity,
+      showPressCount: showPressCount ?? this.showPressCount,
     );
   }
 
@@ -271,11 +276,12 @@ class KeyEventData {
         other.show == show &&
         other.pressed == pressed &&
         other.opacity == opacity &&
-        other.pressedCount == pressedCount;
+        other.pressedCount == pressedCount &&
+        other.showPressCount == showPressCount;
   }
 
   @override
-  int get hashCode => Object.hash(pressed, pressedCount, show, opacity);
+  int get hashCode => Object.hash(pressed, pressedCount, show, opacity, showPressCount);
 
   @override
   String toString() =>

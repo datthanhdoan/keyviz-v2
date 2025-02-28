@@ -184,6 +184,18 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
   // show mouse events with keypress like, [Shift] + [Drag]
   bool _showMouseEvents = _Defaults.showMouseEvents;
 
+  // Thời gian chờ trước khi fade biến mất trong chế độ lịch sử (giây)
+  int _historyFadeDelayInSeconds = _Defaults.historyFadeDelayInSeconds;
+  
+  // Số bước fade khi biến mất
+  int _fadeSteps = _Defaults.fadeSteps;
+  
+  // Hiển thị số lần bấm phím (combo count)
+  bool _showComboCount = _Defaults.showComboCount;
+  
+  // Số lần bấm tối thiểu để hiển thị combo count
+  int _minComboCount = _Defaults.minComboCount;
+
   Screen get _currentScreen => _screens[_screenIndex];
 
   Map<String, Map<int, KeyEventData>> get keyboardEvents => _keyboardEvents;
@@ -227,6 +239,12 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     // Chỉ trả về true nếu historyMode là none
     return _historyMode == VisualizationHistoryMode.none;
   }
+
+  // Getter và setter cho các biến cài đặt mới
+  int get historyFadeDelayInSeconds => _historyFadeDelayInSeconds;
+  int get fadeSteps => _fadeSteps;
+  bool get showComboCount => _showComboCount;
+  int get minComboCount => _minComboCount;
 
   set screenIndex(int value) {
     _screenIndex = value;
@@ -289,6 +307,30 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
 
   set showMouseEvents(bool value) {
     _showMouseEvents = value;
+    notifyListeners();
+    _saveSettings();
+  }
+
+  set historyFadeDelayInSeconds(int value) {
+    _historyFadeDelayInSeconds = value;
+    notifyListeners();
+    _saveSettings();
+  }
+
+  set fadeSteps(int value) {
+    _fadeSteps = value;
+    notifyListeners();
+    _saveSettings();
+  }
+
+  set showComboCount(bool value) {
+    _showComboCount = value;
+    notifyListeners();
+    _saveSettings();
+  }
+
+  set minComboCount(int value) {
+    _minComboCount = value;
     notifyListeners();
     _saveSettings();
   }
@@ -556,8 +598,7 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
 
   _onKeyDown(RawKeyDownEvent event) {
     // filter hotkey
-    if (_filterHotkeys && !_eventIsHotkey(event)) //return;
-    {
+    if (_filterHotkeys && !_eventIsHotkey(event)) {
       debugPrint("⬇️ [${event.data.keyLabel}] not hotkey, returning...");
       return;
     }
@@ -566,52 +607,9 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     if (event.logicalKey.keyLabel == "") {
       // fake mouse event
       if (event.data is! RawKeyEventDataMouse) {
-        // TODO: handle unknown key
         debugPrint("⬇️ ignoring [${event.label}]");
         return;
       }
-    }
-
-    // check if key pressed again while in view
-    // ignoring history and current display events has key id
-    if (_ignoreHistory &&
-        (_keyboardEvents[_groupId]?.containsKey(event.keyId) ?? false)) {
-      // track key pressed down
-      _keyDown[event.keyId] = event;
-
-      // animate key press
-      final data = _keyboardEvents[_groupId]![event.keyId]!;
-      _keyboardEvents[_groupId]![event.keyId] = data.copyWith(
-        pressed: true,
-        pressedCount: data.pressedCount + 1,
-      );
-      notifyListeners();
-
-      // remove previous keys if the above was just tracked
-      if (_keyDown.length == 1) {
-        _keyboardEvents[_groupId]!.removeWhere((key, _) => key != event.keyId);
-      }
-      debugPrint("⬇️ [${event.label}]");
-      return;
-    }
-    // showing history and the last display event
-    // has only one key with this key id
-    else if ((_keyboardEvents.values.lastOrNull?.length ?? 0) == 1 &&
-        _keyboardEvents.values.last.keys.first == event.keyId) {
-      // track key pressed down
-      _keyDown[event.keyId] = event;
-      // reuse last group id
-      _groupId = _keyboardEvents.keys.last;
-      // animate key press
-      final data = _keyboardEvents[_groupId]![event.keyId]!;
-      _keyboardEvents[_groupId]![event.keyId] = data.copyWith(
-        pressed: true,
-        pressedCount: data.pressedCount + 1,
-      );
-      notifyListeners();
-
-      debugPrint("⬇️ [${event.label}]");
-      return;
     }
 
     // init group id
@@ -621,72 +619,51 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
       _keyboardEvents[_groupId!] = {};
     }
 
-    // don't show history i.e. replace existing with new keys
-    if (_ignoreHistory) {
-      // remove key events in display but not pressed down
-      // i.e. waiting for animation out
-      if (_keyboardEvents[_groupId]!.isNotEmpty && _keyDown.isEmpty) {
-        _keyboardEvents[_groupId]!.clear();
+    // Kiểm tra xem phím đã được bấm trước đó chưa và đang trong cùng một group
+    if (_keyboardEvents[_groupId]?.containsKey(event.keyId) ?? false) {
+      final data = _keyboardEvents[_groupId]![event.keyId]!;
+      final newPressedCount = data.pressedCount + 1;
+      final shouldShowCombo = _showComboCount && newPressedCount >= _minComboCount;
+      
+      debugPrint("Key pressed again: ${event.label}");
+      debugPrint("Current count: $newPressedCount");
+      debugPrint("Show combo enabled: $_showComboCount");
+      debugPrint("Min combo count: $_minComboCount");
+      debugPrint("Should show combo: $shouldShowCombo");
+      
+      // Cập nhật KeyEventData với pressedCount mới và hiển thị combo nếu đủ điều kiện
+      _keyboardEvents[_groupId]![event.keyId] = KeyEventData(
+        event,
+        pressed: true,
+        show: true,
+        pressedCount: newPressedCount,
+        showPressCount: shouldShowCombo,
+        opacity: 1.0,
+      );
+      
+      // Xóa các phím khác nếu đang trong combo
+      if (_keyDown.length == 1) {
+        _keyboardEvents[_groupId]!.removeWhere((key, _) => key != event.keyId);
       }
+      
+      _keyDown[event.keyId] = event;
+      notifyListeners();
+      return;
     }
-    // show history
-    else {
-      // enforce display events length
-      if (_keyboardEvents.length > _maxHistory) {
-        for (final group in _keyboardEvents.keys
-            .take(_keyboardEvents.length - _maxHistory)) {
-          _keyboardEvents.remove(group);
-        }
-      }
 
-      if (!_keyUpFollowed) {
-        final events = _keyboardEvents[_groupId];
-        // handle pressed again
-        if (
-            // last pressed event
-            events?.keys.last == event.keyId &&
-                // other keys are pressed down
-                events!.values
-                    .take(events.length - 1)
-                    .every((value) => value.pressed)) {
-          // press the last item
-          // track key pressed down
-          _keyDown[event.keyId] = event;
-          // animate key press
-          final data = _keyboardEvents[_groupId]![event.keyId]!;
-          _keyboardEvents[_groupId]![event.keyId] = data.copyWith(
-            pressed: true,
-            pressedCount: data.pressedCount + 1,
-          );
-          notifyListeners();
-
-          debugPrint("⬇️ [${event.label}]");
-          return;
-        }
-        // create new group
-        else {
-          // dispatch key up for not removed
-          for (final keyId in _keyDown.keys) {
-            _animateOut(_groupId!, keyId);
-          }
-          // change group id
-          _groupId = _timestamp;
-          // duplicate key downs
-          _keyboardEvents[_groupId!] = {
-            for (final entry in _keyDown.entries)
-              entry.key: KeyEventData(entry.value),
-          };
-        }
-      }
-    }
+    // Tạo KeyEventData mới cho phím chưa được bấm
+    final keyEventData = KeyEventData(
+      event,
+      pressed: true,
+      show: !noKeyCapAnimation,
+      pressedCount: 1,
+      showPressCount: false,
+      opacity: 1.0,
+    );
 
     // track key pressed down
     _keyDown[event.keyId] = event;
-
-    _keyboardEvents[_groupId]![event.keyId] = KeyEventData(
-      event,
-      show: noKeyCapAnimation,
-    );
+    _keyboardEvents[_groupId]![event.keyId] = keyEventData;
 
     // animate with configured key cap animation
     if (!noKeyCapAnimation) {
@@ -694,11 +671,7 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     }
 
     notifyListeners();
-
-    debugPrint("keyboardEvents: $_keyboardEvents");
     debugPrint("⬇️ [${event.label}]");
-
-    // key event tracking
     _lastKeyDown = true;
   }
 
@@ -740,120 +713,29 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
   }
 
   _animateOut(String groupId, int keyId) async {
-    final event = _keyboardEvents[groupId]?[keyId];
-    if (event == null) return;
-
-    // animate key released
-    _keyboardEvents[groupId]![keyId] = event.copyWith(pressed: false);
-    notifyListeners();
-
-    // don't animate out when styling i.e. settings windows opened
-    if (_styling) return;
-
-    final pressedCount = event.pressedCount;
-
-    // wait for linger duration
-    await Future.delayed(lingerDuration);
-
-    // new pressed count
-    final newEvent = _keyboardEvents[groupId]?[keyId];
-
-    if ( // make sure key event not removed
-        // newPressedCount == null ||
-        // key not pressed again
-        pressedCount != newEvent?.pressedCount) {
-      debugPrint("key pressed again, returning...");
-      return;
-    }
-
-    // Nếu đang ở chế độ hiển thị lịch sử, chỉ cập nhật opacity
-    if (_historyMode != VisualizationHistoryMode.none) {
-      // Thêm hiệu ứng fade mượt mà cho phím trong chế độ lịch sử
-      const fadeSteps = 8;
-      final fadeStepDuration = (animationDuration.inMilliseconds ~/ fadeSteps).clamp(30, 80);
-      
-      // Giảm dần opacity từ 1.0 xuống 0.8
-      for (int i = 1; i <= fadeSteps; i++) {
-        final opacity = (1.0 - (i / fadeSteps) * 0.2).clamp(0.8, 1.0);
-        _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: opacity);
-        notifyListeners();
-        await Future.delayed(Duration(milliseconds: fadeStepDuration));
-      }
-      
-      // Cập nhật trạng thái cuối cùng
-      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: 0.8);
-      notifyListeners();
-      
-      // Đặt một timer để xóa phím sau 10 giây
-      Future.delayed(Duration(seconds: 10), () {
-        // Kiểm tra xem phím còn tồn tại không
-        if (_keyboardEvents.containsKey(groupId) && 
-            _keyboardEvents[groupId]!.containsKey(keyId) &&
-            _keyboardEvents[groupId]![keyId]!.pressedCount == pressedCount) {
-          // Thêm hiệu ứng fade out hoàn toàn
-          const fadeSteps = 10;
-          final fadeStepDuration = (animationDuration.inMilliseconds ~/ fadeSteps).clamp(30, 80);
-          
-          // Giảm dần opacity từ 0.8 xuống 0.0
-          for (int i = 1; i <= fadeSteps; i++) {
-            final opacity = (0.8 * (1.0 - i / fadeSteps)).clamp(0.0, 0.8);
-            
-            // Kiểm tra lại xem phím còn tồn tại không
-            if (!_keyboardEvents.containsKey(groupId) || 
-                !_keyboardEvents[groupId]!.containsKey(keyId)) {
-              return;
+    Future.delayed(Duration(seconds: _historyFadeDelayInSeconds), () {
+      if (_keyboardEvents.containsKey(groupId)) {
+        final events = _keyboardEvents[groupId]!;
+        
+        // Sử dụng _fadeSteps để tạo hiệu ứng mờ dần
+        for (int i = 1; i <= _fadeSteps; i++) {
+          Future.delayed(Duration(milliseconds: i * 100), () {
+            for (final event in events.values) {
+              _keyboardEvents[groupId]![event.rawEvent.keyId] = event.copyWith(
+                opacity: 1.0 - (i / _fadeSteps),
+              );
             }
-            
-            _keyboardEvents[groupId]![keyId] = _keyboardEvents[groupId]![keyId]!.copyWith(opacity: opacity);
             notifyListeners();
-            
-            await Future.delayed(Duration(milliseconds: fadeStepDuration));
-          }
-          
-          // Xóa phím sau khi hoàn thành hiệu ứng
-          _keyboardEvents[groupId]!.remove(keyId);
-          notifyListeners();
-          
-          // Kiểm tra xem nhóm có trống không
-          if (_keyboardEvents[groupId]!.isEmpty) {
-            _keyboardEvents.remove(groupId);
-            notifyListeners();
-          }
+          });
         }
-      });
-      
-      return;
-    }
-    
-    // Thêm hiệu ứng fade out trước khi ẩn hoàn toàn
-    if (!noKeyCapAnimation) {
-      // Giảm dần opacity từ 1.0 xuống 0.0
-      const fadeSteps = 15; // Tăng số bước để hiệu ứng mượt hơn
-      final fadeStepDuration = (animationDuration.inMilliseconds ~/ fadeSteps).clamp(20, 50); // Đảm bảo thời gian hợp lý
-      
-      for (int i = 1; i <= fadeSteps; i++) {
-        final opacity = (1.0 - (i / fadeSteps)).clamp(0.0, 1.0);
-        _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(opacity: opacity);
-        notifyListeners();
-        await Future.delayed(Duration(milliseconds: fadeStepDuration));
+        
+        // Xóa sự kiện sau khi hoàn tất hiệu ứng mờ dần
+        Future.delayed(Duration(milliseconds: _fadeSteps * 100), () {
+          _keyboardEvents.remove(groupId);
+          notifyListeners();  
+        });
       }
-      
-      // animate out the key event
-      _keyboardEvents[groupId]![keyId] = newEvent!.copyWith(show: false, opacity: 0.0);
-      notifyListeners();
-
-      // wait for animation to finish
-      await Future.delayed(animationDuration);
-    }
-    
-    // Xóa phím sau khi hoàn thành hiệu ứng
-    _keyboardEvents[groupId]!.remove(keyId);
-    notifyListeners();
-
-    // check if the group is exhausted
-    if (!_ignoreHistory && _keyboardEvents[groupId]!.isEmpty) {
-      _keyboardEvents.remove(groupId);
-    }
+    });
   }
 
   _removeKeyboardListener() {
@@ -982,6 +864,10 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
         _JsonKeys.showMouseClicks: _showMouseClicks,
         _JsonKeys.highlightCursor: _highlightCursor,
         _JsonKeys.showMouseEvents: _showMouseEvents,
+        _JsonKeys.historyFadeDelayInSeconds: _historyFadeDelayInSeconds,
+        _JsonKeys.fadeSteps: _fadeSteps,
+        _JsonKeys.showComboCount: _showComboCount,
+        _JsonKeys.minComboCount: _minComboCount,
       };
 
   _updateFromJson() async {
@@ -1076,6 +962,16 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
         data[_JsonKeys.highlightCursor] ?? _Defaults.highlightCursor;
     _showMouseEvents =
         data[_JsonKeys.showMouseEvents] ?? _Defaults.showMouseEvents;
+        
+    // Tải các cài đặt mới
+    _historyFadeDelayInSeconds = 
+        data[_JsonKeys.historyFadeDelayInSeconds] ?? _Defaults.historyFadeDelayInSeconds;
+    _fadeSteps = 
+        data[_JsonKeys.fadeSteps] ?? _Defaults.fadeSteps;
+    _showComboCount = 
+        data[_JsonKeys.showComboCount] ?? _Defaults.showComboCount;
+    _minComboCount = 
+        data[_JsonKeys.minComboCount] ?? _Defaults.minComboCount;
   }
 
   _setDisplay(List? frame) async {
@@ -1131,6 +1027,12 @@ class KeyEventProvider extends ChangeNotifier with TrayListener {
     _showMouseClicks = _Defaults.showMouseClicks;
     _highlightCursor = _Defaults.highlightCursor;
     _showMouseEvents = _Defaults.showMouseEvents;
+    
+    // Đặt lại các cài đặt mới về giá trị mặc định
+    _historyFadeDelayInSeconds = _Defaults.historyFadeDelayInSeconds;
+    _fadeSteps = _Defaults.fadeSteps;
+    _showComboCount = _Defaults.showComboCount;
+    _minComboCount = _Defaults.minComboCount;
 
     notifyListeners();
     
@@ -1202,6 +1104,10 @@ class _JsonKeys {
   static const showMouseClicks = "show_clicks";
   static const highlightCursor = "highlight_cursor";
   static const showMouseEvents = "show_mouse_events";
+  static const historyFadeDelayInSeconds = "history_fade_delay";
+  static const fadeSteps = "fade_steps";
+  static const showComboCount = "show_combo_count";
+  static const minComboCount = "min_combo_count";
 }
 
 class _Defaults {
@@ -1220,4 +1126,8 @@ class _Defaults {
   static const showMouseClicks = true;
   static const highlightCursor = false;
   static const showMouseEvents = true;
+  static const historyFadeDelayInSeconds = 5;
+  static const fadeSteps = 10;
+  static const showComboCount = true;
+  static const minComboCount = 2;
 }

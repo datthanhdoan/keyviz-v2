@@ -7,8 +7,154 @@ import 'package:keyviz/providers/key_event.dart';
 import 'package:keyviz/providers/language_provider.dart';
 import 'package:keyviz/l10n/app_localizations.dart';
 import 'package:keyviz/domain/vault/vault.dart';
+import 'package:keyviz/providers/key_style.dart';
 
 import '../widgets/widgets.dart';
+import '../widgets/cross_slider.dart';
+
+// Thêm các widget Settings cần thiết
+class SettingsSection extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Widget child;
+
+  const SettingsSection({
+    Key? key,
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class SettingsSlider extends StatelessWidget {
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+  final String label;
+  final ValueChanged<double> onChanged;
+
+  const SettingsSlider({
+    Key? key,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.label,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: divisions,
+          label: label,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+class SettingsDropdown<T> extends StatelessWidget {
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  const SettingsDropdown({
+    Key? key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      isExpanded: true,
+    );
+  }
+}
+
+class SettingsSwitch extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const SettingsSwitch({
+    Key? key,
+    required this.value,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Switch(
+      value: value,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class SettingsButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+
+  const SettingsButton({
+    Key? key,
+    required this.label,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text(label),
+    );
+  }
+}
+
+// Thêm phương thức mở rộng cho String để hỗ trợ tr
+extension StringExtension on String {
+  String tr(BuildContext context, String text) {
+    // Sử dụng AppLocalizations để dịch nếu có
+    // Hoặc trả về text gốc nếu không có bản dịch
+    return text;
+  }
+}
 
 class GeneralTabView extends StatelessWidget {
   const GeneralTabView({super.key});
@@ -85,6 +231,78 @@ class GeneralTabView extends StatelessWidget {
                 },
               );
             },
+          ),
+        ),
+        const Divider(),
+        // History Fade Delay
+        PanelItem(
+          title: context.tr('history_fade_delay'),
+          subtitle: context.tr('how_long_before_keys_fade'),
+          action: Selector<KeyEventProvider, int>(
+            selector: (_, keyEvent) => keyEvent.historyFadeDelayInSeconds,
+            builder: (_, fadeDelay, __) => XSlider(
+              value: fadeDelay.toDouble(),
+              min: 1,
+              max: 10,
+              divisions: 9,
+              suffix: " ${context.tr('seconds')}",
+              onChanged: (value) {
+                context.keyEvent.historyFadeDelayInSeconds = value.toInt();
+              },
+            ),
+          ),
+        ),
+        const Divider(),
+        // Fade Steps
+        PanelItem(
+          title: context.tr('fade_steps'),
+          subtitle: context.tr('number_of_fade_steps'),
+          action: Selector<KeyEventProvider, int>(
+            selector: (_, keyEvent) => keyEvent.fadeSteps,
+            builder: (_, fadeSteps, __) => XSlider(
+              value: fadeSteps.toDouble(),
+              min: 5,
+              max: 20,
+              divisions: 15,
+              suffix: " ${context.tr('steps')}",
+              onChanged: (value) {
+                context.keyEvent.fadeSteps = value.toInt();
+              },
+            ),
+          ),
+        ),
+        const Divider(),
+        // Show Combo Count
+        PanelItem(
+          title: context.tr('show_combo_count'),
+          subtitle: context.tr('show_number_of_key_presses'),
+          action: Selector<KeyEventProvider, bool>(
+            selector: (_, keyEvent) => keyEvent.showComboCount,
+            builder: (_, showComboCount, __) => XSwitch(
+              value: showComboCount,
+              onChange: (value) {
+                context.keyEvent.showComboCount = value;
+              },
+            ),
+          ),
+        ),
+        const Divider(),
+        // Min Combo Count
+        PanelItem(
+          title: context.tr('min_combo_count'),
+          subtitle: context.tr('minimum_presses_to_show_count'),
+          action: Selector<KeyEventProvider, int>(
+            selector: (_, keyEvent) => keyEvent.minComboCount,
+            builder: (_, minComboCount, __) => XSlider(
+              value: minComboCount.toDouble(),
+              min: 2,
+              max: 10,
+              divisions: 8,
+              suffix: " ${context.tr('presses')}",
+              onChanged: (value) {
+                context.keyEvent.minComboCount = value.toInt();
+              },
+            ),
           ),
         ),
         const Divider(),
